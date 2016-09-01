@@ -6,8 +6,8 @@
 //  Copyright © 2016 Tera Insights, LLC. All rights reserved.
 //
 
-import Foundation
 import UIKit
+import Security
 
 var cache: [String:String] = [:]
 
@@ -100,15 +100,15 @@ func register(challenge challenge: String, serverInfo: [String:AnyObject], userI
     
     if let keyRefs = genKeyPair() {
         
-        
-
-        
         if userIsAlreadyRegistered(userID, forServer: serverInfo["appID"] as! String) {
             
             displayText(withTitle: serverInfo["appName"] as? String, withMessage: "This device is alrady registered to your account.")
             return
             
         }
+        
+        print("\nRaw: \(keyRefs.certificate)")
+        print("Length: \(keyRefs.certificate.length)")
         
     }
     
@@ -118,7 +118,7 @@ private func authenticate(appID appID: String, challenge: String, keyID: String,
     // TODO: FINISH AUTHENTICATION
 }
 
-private func genKeyPair() -> (privateAlias: String, cert: SecKey)? {
+private func genKeyPair() -> (privateAlias: String, certificate: NSData)? {
     
     // Generate a keyhandle, which will be returned as an alias for the private key
     let numBytes = 16
@@ -127,46 +127,48 @@ private func genKeyPair() -> (privateAlias: String, cert: SecKey)? {
     let data = NSData(bytes: &randomBytes, length: numBytes)
     let alias = data.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
     
-    // If running iOS 9 or newer, use the Secure Enclave
-    if #available(iOS 9.0, *) {
-        keyParams[kSecAttrTokenID as String] = kSecAttrTokenIDSecureEnclave
-    }
-    
-    var privateKeyAccessFlags: SecAccessControlCreateFlags
-    
-    if #available(iOS 9.0, *) {
-        privateKeyAccessFlags = [.TouchIDAny, .PrivateKeyUsage]
-    } else {
-        privateKeyAccessFlags = .UserPresence
-    }
-    
-    let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, privateKeyAccessFlags, nil)!
+    let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .UserPresence, nil)!
     
     // private key parameters
     keyParams[kSecPrivateKeyAttrs as String] = [
-        kSecAttrLabel as String: alias,
         kSecAttrIsPermanent as String: true,
-        kSecAttrApplicationTag as String: "com.terainsights.a2Q2R",
+        kSecAttrApplicationTag as String: alias,
         kSecAttrAccessControl as String: access
     ]
     
     // public key parameters
     keyParams[kSecPublicKeyAttrs as String] = [
-        kSecAttrLabel as String: alias + "-pub",
-        kSecAttrIsPermanent as String: false,
-        kSecAttrApplicationTag as String: "com.terainsights.a2Q2R"
+        kSecAttrIsPermanent as String: true,
+        kSecAttrApplicationTag as String: alias + "-pub"
     ]
     
     var pubKey, privKey: SecKey?
-    let err = SecKeyGeneratePair(keyParams, &pubKey, &privKey)
+    var err = SecKeyGeneratePair(keyParams, &pubKey, &privKey)
     
-    if let cert = pubKey where err == errSecSuccess {
+    guard let _ = pubKey where err == errSecSuccess else {
         
+        print("Error while generating key pair: \(err).")
+        return nil
+        
+    }
+    
+    let query = [
+        kSecClass as String: kSecClassKey,
+        kSecAttrApplicationTag as String: alias + "-pub",
+        kSecAttrKeyType as String: kSecAttrKeyTypeEC,
+        kSecReturnData as String: true
+    ]
+    var certOpt: AnyObject?
+    err = SecItemCopyMatching(query, &certOpt)
+    
+    if let cert = certOpt as? NSData where err == errSecSuccess {
+        
+        print("Successfully retrieved public key!")
         return (alias, cert)
         
     } else {
         
-        print("Failed to generate keys, error: \(err)")
+        print("Error retrieving public key: \(err).")
         return nil
         
     }
