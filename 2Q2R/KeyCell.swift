@@ -10,8 +10,7 @@ import UIKit
 
 class KeyCell: UITableViewCell {
     
+    @IBOutlet weak var appName: UILabel!
     @IBOutlet weak var userID: UILabel!
-    @IBOutlet weak var serverName: UILabel!
-    
     
 }

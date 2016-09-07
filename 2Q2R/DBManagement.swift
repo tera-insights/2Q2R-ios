@@ -4,6 +4,7 @@
 //
 //  Created by Sam Claus on 8/24/16.
 //  Copyright © 2016 Tera Insights, LLC. All rights reserved.
+//  TODO: setCounter should also update the datetime on the key
 //
 
 import Foundation

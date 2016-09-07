@@ -8,6 +8,7 @@
 
 import AVFoundation
 import UIKit
+import CoreGraphics
 
 class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     
@@ -15,12 +16,15 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
     var previewLayer: AVCaptureVideoPreviewLayer?
     var shouldReceiveInput: Bool = true
     
+    @IBOutlet weak var scanFrame: UIView!
     @IBOutlet weak var scanLabel: UIView!
-    @IBOutlet weak var label: UIView!
     
     override func viewDidLoad() {
         
         super.viewDidLoad()
+        
+        scanFrame.layer.borderWidth = 3
+        scanFrame.layer.borderColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.6).CGColor
         
         // Initialize the camera
         let captureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
@@ -50,6 +54,7 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         previewLayer?.videoGravity = AVLayerVideoGravityResizeAspectFill
         previewLayer?.frame = view.layer.bounds
         view.layer.addSublayer(previewLayer!)
+        view.bringSubviewToFront(scanFrame)
         view.bringSubviewToFront(scanLabel)
         
         // Begin video capture

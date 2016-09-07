@@ -15,7 +15,9 @@ class Main: UITableViewController {
     
     @IBAction func onAboutAction(sender: AnyObject) {
         
-        UIAlertView(title: "2Q2R Version 1.0", message: "©2016 Tera Insights, LLC.\nLicensed under Apache 2.0.", delegate: nil, cancelButtonTitle: "Okay").show()
+        let alert = UIAlertController(title: "2Q2R Version 1.0", message: "©2016 Tera Insights, LLC.\nLicensed under Apache 2.0.", preferredStyle: .Alert)
+        alert.addAction(UIAlertAction(title: "Okay", style: .Cancel, handler: nil))
+        presentViewController(alert, animated: true, completion: nil)
         
     }
     
@@ -68,7 +70,7 @@ class Main: UITableViewController {
         let appName = indexPath.section == 0 ? recentKeys[indexPath.row]["appName"] : allKeys[indexPath.row]["appName"]
         
         cell.userID.text = userID as? String
-        cell.serverName.text = appName as? String
+        cell.appName.text = appName as? String
         
         return cell;
         

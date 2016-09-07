@@ -7,7 +7,9 @@
 //
 
 import UIKit
-//import Firebase
+import Firebase
+
+var applicationWindow: UIWindow?
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -19,16 +21,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Configure Firebase
         //FIRApp.configure()
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) {
+        applicationWindow = window
         
-            // Prep the U2F database
-            database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter INT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
-            database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
-            
-            print("Attempting to register...")
-            register(challenge: "f9uf2f8m2f2mf82fm29f8m", serverInfo: ["appID": "woainvier9", "appName": "2Q2R Demo"], userID: "sam@tera.com")
-            
-        }
+        // Prep the U2F database
+        database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter INT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
+        database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
         
         return true
     }
