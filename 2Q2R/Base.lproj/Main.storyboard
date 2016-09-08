@@ -95,40 +95,46 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="s19-pm-Uxr">
-                                <rect key="frame" x="265" y="336" width="71" height="30"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="You do not have any keys registered on this device yet." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="3" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kxi-hF-FDC">
+                                <rect key="frame" x="165" y="274" width="271" height="52"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="71" id="5Z5-Vt-LRh"/>
+                                    <constraint firstAttribute="width" constant="271" id="4Sl-1y-qWv"/>
                                 </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="21"/>
+                                <nil key="highlightedColor"/>
+                                <size key="shadowOffset" width="0.0" height="0.0"/>
+                            </label>
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="s19-pm-Uxr">
+                                <rect key="frame" x="260" y="334" width="81" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="81" id="reG-r7-SD3"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="20"/>
                                 <state key="normal" title="Register"/>
                                 <connections>
                                     <action selector="onRegisterAction:" destination="f7M-fY-hnx" eventType="touchUpInside" id="3ui-oz-apb"/>
                                     <action selector="onScanAction:" destination="f7M-fY-hnx" eventType="touchUpInside" id="x56-DN-lm5"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="You do not have any keys registered on this device yet." textAlignment="center" lineBreakMode="wordWrap" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Kxi-hF-FDC">
-                                <rect key="frame" x="152" y="273" width="296" height="53"/>
-                                <constraints>
-                                    <constraint firstAttribute="width" constant="296" id="ZeG-hK-7PY"/>
-                                </constraints>
-                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
-                                <nil key="highlightedColor"/>
-                                <size key="shadowOffset" width="0.0" height="0.0"/>
-                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="s19-pm-Uxr" firstAttribute="centerX" secondItem="Kxi-hF-FDC" secondAttribute="centerX" id="4ne-sH-gNa"/>
-                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerY" secondItem="NuS-bD-Tpa" secondAttribute="centerY" id="VC5-Sb-W0I"/>
-                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerX" secondItem="NuS-bD-Tpa" secondAttribute="centerX" id="aPj-RN-GA8"/>
+                            <constraint firstItem="s19-pm-Uxr" firstAttribute="top" secondItem="Kxi-hF-FDC" secondAttribute="bottom" constant="8" id="0rq-Xd-KL7"/>
+                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerX" secondItem="NuS-bD-Tpa" secondAttribute="centerX" id="GGq-fN-lVn"/>
+                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerX" secondItem="s19-pm-Uxr" secondAttribute="centerX" id="Isg-wM-hqu"/>
                             <constraint firstItem="2e9-WZ-tVg" firstAttribute="top" secondItem="s19-pm-Uxr" secondAttribute="bottom" constant="234" id="fNC-od-Qk5"/>
                             <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerX" secondItem="s19-pm-Uxr" secondAttribute="centerX" id="nmA-ku-VIz"/>
-                            <constraint firstItem="s19-pm-Uxr" firstAttribute="top" secondItem="Kxi-hF-FDC" secondAttribute="bottom" constant="10" id="vQs-YW-fM2"/>
+                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="top" secondItem="amP-uX-OH4" secondAttribute="bottom" constant="254" id="nog-rx-rkN"/>
+                            <constraint firstItem="s19-pm-Uxr" firstAttribute="centerX" secondItem="NuS-bD-Tpa" secondAttribute="centerX" id="oof-zp-BaA"/>
+                            <constraint firstItem="s19-pm-Uxr" firstAttribute="top" secondItem="Kxi-hF-FDC" secondAttribute="bottom" constant="8" symbolic="YES" id="pwo-Ag-rpY"/>
+                            <constraint firstItem="Kxi-hF-FDC" firstAttribute="centerY" secondItem="NuS-bD-Tpa" secondAttribute="centerY" id="tcU-B7-stI"/>
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
+                                <exclude reference="Isg-wM-hqu"/>
                                 <exclude reference="nmA-ku-VIz"/>
+                                <exclude reference="nog-rx-rkN"/>
+                                <exclude reference="pwo-Ag-rpY"/>
                                 <exclude reference="fNC-od-Qk5"/>
                             </mask>
                         </variation>

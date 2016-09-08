@@ -2,7 +2,6 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15G31" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" initialViewController="01J-lp-oVM">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
-        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
     </dependencies>
     <scenes>
         <!--View Controller-->
@@ -17,39 +16,31 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="tera-icon-blue" translatesAutoresizingMaskIntoConstraints="NO" id="3hL-bF-WcT">
-                                <rect key="frame" x="200" y="200" width="200" height="200"/>
+                            <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="tera-icon-blue" translatesAutoresizingMaskIntoConstraints="NO" id="AnF-BV-KVR">
+                                <rect key="frame" x="180" y="150" width="240" height="240"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="240" id="KiU-yJ-x6q"/>
-                                    <constraint firstAttribute="width" constant="200" id="oh7-4I-WtM"/>
-                                    <constraint firstAttribute="width" constant="278" id="pcn-qj-2dW"/>
-                                    <constraint firstAttribute="width" secondItem="3hL-bF-WcT" secondAttribute="height" multiplier="1:1" id="ues-fl-riI"/>
+                                    <constraint firstAttribute="width" constant="240" id="nod-Hc-jqz"/>
                                 </constraints>
-                                <variation key="default">
-                                    <mask key="constraints">
-                                        <exclude reference="KiU-yJ-x6q"/>
-                                        <exclude reference="pcn-qj-2dW"/>
-                                    </mask>
-                                </variation>
                             </imageView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="tera insights" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Oaj-qX-sY0">
+                                <rect key="frame" x="180" y="398" width="240" height="51"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="51" id="bep-tO-ig4"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" name="HelveticaNeue-Bold" family="Helvetica Neue" pointSize="40"/>
+                                <color key="textColor" red="0.12549019607843137" green="0.33725490196078434" blue="0.67450980392156867" alpha="1" colorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="1mX-Ch-Ur9"/>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="7wE-X5-Wkm"/>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="DI8-oB-a5X"/>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="216" id="Kel-Fo-wWJ"/>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="180" id="dDS-3I-3iP"/>
-                            <constraint firstItem="3hL-bF-WcT" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="yIC-p8-FDg"/>
+                            <constraint firstItem="AnF-BV-KVR" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="4tS-Ld-ZC4"/>
+                            <constraint firstItem="xb3-aO-Qok" firstAttribute="top" secondItem="Oaj-qX-sY0" secondAttribute="bottom" constant="151" id="Edp-kb-jF5"/>
+                            <constraint firstItem="AnF-BV-KVR" firstAttribute="top" secondItem="Llm-lL-Icb" secondAttribute="bottom" constant="130" id="eJx-nO-Ic1"/>
+                            <constraint firstItem="AnF-BV-KVR" firstAttribute="trailing" secondItem="Oaj-qX-sY0" secondAttribute="trailing" id="fRc-yy-yZK"/>
+                            <constraint firstItem="AnF-BV-KVR" firstAttribute="leading" secondItem="Oaj-qX-sY0" secondAttribute="leading" id="xqZ-O5-tpk"/>
+                            <constraint firstItem="Oaj-qX-sY0" firstAttribute="top" secondItem="AnF-BV-KVR" secondAttribute="bottom" constant="8" symbolic="YES" id="yvi-T2-MCR"/>
                         </constraints>
-                        <variation key="default">
-                            <mask key="constraints">
-                                <exclude reference="1mX-Ch-Ur9"/>
-                                <exclude reference="Kel-Fo-wWJ"/>
-                                <exclude reference="dDS-3I-3iP"/>
-                                <exclude reference="yIC-p8-FDg"/>
-                            </mask>
-                        </variation>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -58,6 +49,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="tera-icon-blue" width="256" height="256"/>
+        <image name="tera-icon-blue" width="512" height="512"/>
     </resources>
 </document>
