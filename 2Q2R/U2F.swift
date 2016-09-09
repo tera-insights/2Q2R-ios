@@ -74,7 +74,6 @@ private func checkValid(qr qr: String) -> Type {
     
     switch qrArgs[0] {
         case "R":
-            print("Registration QR...")
             if qrArgs.count != 4 {
                 print("Incorrect number of arguments.")
                 break
@@ -107,7 +106,7 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
         
         if userIsAlreadyRegistered(userID, forServer: info["appID"] as! String) {
             
-            displayText(withTitle: info["appName"] as? String, withMessage: "This device is alrady registered to your account.")
+            displayText(withTitle: info["appName"] as? String, withMessage: "This device is already registered to your account.")
             return
             
         }
@@ -144,19 +143,27 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
             registrationData.appendData(x509DER)
             registrationData.appendData(signature)
             
-            let registration: [String:String] = [
-                "type": "2q2r",
-                "deviceName": UIDevice.currentDevice().name,
-                "fcmToken": FIRInstanceID.instanceID().token()!,
-                "clientData": clientData,
-                "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+            let registration: [String:AnyObject] = [
+                "successful": true,
+                "data": [
+                    "type": "2q2r",
+                    "deviceName": UIDevice.currentDevice().name,
+                    "fcmToken": "",
+                    "clientData": clientData,
+                    "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+                ]
             ]
+            
+            print(registration["data"]!["registrationData"]!)
             
             do {
                 
-                let json = try NSJSONSerialization.dataWithJSONObject(registration, options: .PrettyPrinted)
+                let json = try NSJSONSerialization.dataWithJSONObject(registration, options: NSJSONWritingOptions(rawValue: 0))
+                
+                let baseURL = info["baseURL"] as! String
+                let regURL = baseURL + (baseURL.substringFromIndex(baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
             
-                if let url = NSURL(string: info["baseURL"] as! String) {
+                if let url = NSURL(string: regURL) {
                     
                     let req = NSMutableURLRequest(URL: url)
                     req.HTTPMethod = "POST"
@@ -177,10 +184,6 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
                 print("Failed to produce registration response JSON!")
                 
             }
-            
-        } else {
-            
-            print("Failed to sign the registration response!")
             
         }
         
@@ -214,16 +217,16 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     // Private key parameters
     keyParams[kSecPrivateKeyAttrs as String] = [
         kSecAttrIsPermanent as String: true,
-        kSecAttrLabel as String: alias,
-        kSecAttrApplicationTag as String: applicationTag,
+        kSecAttrLabel as String: "private",
+        kSecAttrApplicationTag as String: alias,
         kSecAttrAccessControl as String: access
     ]
     
     // Public key parameters
     keyParams[kSecPublicKeyAttrs as String] = [
         kSecAttrIsPermanent as String: true,
-        kSecAttrLabel as String: alias + "-pub",
-        kSecAttrApplicationTag as String: applicationTag
+        kSecAttrLabel as String: "public",
+        kSecAttrApplicationTag as String: alias
     ]
     
     var pubKeyRef, privKeyRef: SecKey?
@@ -239,7 +242,8 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     // Export the public key for application use
     let query = [
         kSecClass as String: kSecClassKey,
-        kSecAttrLabel as String: alias + "-pub",
+        kSecAttrLabel as String: "public",
+        kSecAttrApplicationTag as String: alias,
         kSecAttrKeyType as String: kSecAttrKeyTypeEC,
         kSecReturnData as String: true
     ]
@@ -248,7 +252,6 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     
     if let pubKey = pubKeyOpt as? NSData where err == errSecSuccess {
         
-        print("Successfully retrieved public key!")
         return (alias, pubKey)
         
     } else {
@@ -264,8 +267,8 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
     
     let query = [
         kSecClass as String: kSecClassKey,
-        kSecAttrLabel as String: alias,
-        kSecAttrApplicationTag as String: applicationTag,
+        kSecAttrLabel as String: "private",
+        kSecAttrApplicationTag as String: alias,
         kSecAttrKeyType as String: kSecAttrKeyTypeEC,
         kSecReturnRef as String: true
     ]
@@ -280,22 +283,13 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
         
     }
     
-    print("\nData: \(data)")
-    print("Length: \(data.length)")
-    
     let hashedData = NSMutableData(length: Int(CC_SHA256_DIGEST_LENGTH))!
     CC_SHA256(data.bytes, CC_LONG(data.length), UnsafeMutablePointer(hashedData.mutableBytes))
     
-    print("\nHashed data: \(hashedData)")
-    print("Length: \(hashedData.length)")
-    
-    var signedHashLength = SecKeyGetBlockSize(privateKey as! SecKeyRef)
+    var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
     let signedHash = NSMutableData(length: signedHashLength)!
     
     error = SecKeyRawSign(privateKey as! SecKeyRef, .PKCS1SHA256, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
-    
-    print("\nSigned hash: \(signedHash)")
-    print("Length: \(signedHashLength)\n")
     
     guard error == errSecSuccess else {
         
@@ -304,7 +298,7 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
         
     }
     
-    return signedHash
+    return signedHash.subdataWithRange(NSMakeRange(0, 71))
     
 }
 
@@ -330,6 +324,7 @@ private func infoResponseHandler(data: NSData?, response: NSURLResponse?, error:
 private func registrationResponseHandler(data: NSData?, response: NSURLResponse?, error: NSError?) {
     
     let status = (response as! NSHTTPURLResponse).statusCode
+    print("Server response: \(status)")
     
     if status == 200 {
         
@@ -363,7 +358,7 @@ private func authenticationResponseHandler(data: NSData?, response: NSURLRespons
         
     } else if status == 401 {
         
-        displayText(withTitle: cache["appName"], withMessage: "Authentication failed.")
+        displayText(withTitle: cache["appName"], withMessage: "Authentication declined.")
         
     } else if status == 408 {
         

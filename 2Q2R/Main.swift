@@ -75,7 +75,35 @@ class Main: UITableViewController {
         return cell;
         
     }
-
+    
+    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+        
+        let keyDesc = (indexPath.section == 0 ? recentKeys[indexPath.row] : allKeys[indexPath.row])
+        let keyDetailsView = storyboard?.instantiateViewControllerWithIdentifier("keyDetails") as! KeyDetails
+        
+        let dateTimeUsed = keyDesc["used"] as! NSDate
+        let formatter = NSDateFormatter()
+        
+        formatter.dateStyle = .LongStyle
+        formatter.timeStyle = .NoStyle
+        let dateUsed = formatter.stringFromDate(dateTimeUsed)
+        
+        formatter.dateStyle = .NoStyle
+        formatter.timeStyle = .ShortStyle
+        let timeUsed = formatter.stringFromDate(dateTimeUsed)
+        
+        keyDetailsView.appName = keyDesc["appName"] as! String
+        keyDetailsView.baseURL = keyDesc["baseURL"] as! String
+        keyDetailsView.userID = keyDesc["userID"] as! String
+        keyDetailsView.counter = "\(keyDesc["counter"]!)"
+        keyDetailsView.dateUsed = dateUsed
+        keyDetailsView.timeUsed = timeUsed
+        
+        navigationController?.pushViewController(keyDetailsView, animated: true)
+        
+        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        
+    }
 
 }
 

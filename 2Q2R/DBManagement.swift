@@ -49,6 +49,21 @@ func getInfo(forServer appID: String) -> (appName: String, baseURL: String)? {
 
 func getRecentKeys() -> [[String:AnyObject]] {
     
+    // Prep the U2F database
+    database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used TEXT NOT NULL);")
+    database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
+    database.execute("DELETE FROM keys;")
+    database.execute("DELETE FROM servers;")
+    database.execute("INSERT INTO servers VALUES ('-T_wxhSkkkJDJJlnyeo', '2Q2R Server Demo', 'https://fake.domain.com/');")
+    let dateTime = NSDate()
+    
+    database.execute("INSERT INTO keys VALUES ('awonfawofoa-_2233nj-', '-T_wxhSkkkJDJJlnyeo', '0', 'alin@tera.com', '\(dateTime)');")
+    database.execute("INSERT INTO keys VALUES ('afniaifninia', '-T_wxhSkkkJDJJlnyeo', '4', 'sam@terainsights.com', '\(dateTime)');")
+    database.execute("INSERT INTO keys VALUES ('eawf982fm2msk', '-T_wxhSkkkJDJJlnyeo', '1', 'jess@terainsights.com', '\(dateTime)');")
+    database.execute("INSERT INTO keys VALUES ('wd89fj289fiss', '-T_wxhSkkkJDJJlnyeo', '37', 'tiffany@terainsights.com', '\(dateTime)');")
+    database.execute("INSERT INTO keys VALUES ('e1udniun_1jnn', '-T_wxhSkkkJDJJlnyeo', '15', 'jon@terainsights.com', '\(dateTime)');")
+    database.execute("INSERT INTO keys VALUES ('wf8w2f--wufnwfeun_', '-T_wxhSkkkJDJJlnyeo', '22', 'chris@terainsights.com', '\(dateTime)');")
+    
     return database.query("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5;")
     
 }
@@ -73,7 +88,7 @@ func getCounter(forKey keyID: String) -> Int? {
 
 func setCounter(forKey keyID: String, to counter: Int) {
     
-    database.execute("UPDATE keys SET counter = '\(counter)' WHERE keyID = '\(keyID)';")
+    database.execute("UPDATE keys SET counter = '\(counter)', used = '\(NSDate())' WHERE keyID = '\(keyID)';")
     
 }
 

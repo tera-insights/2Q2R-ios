@@ -23,10 +23,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         applicationWindow = window
         
-        // Prep the U2F database
-        database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter INT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
-        database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
-        
         return true
     }
 

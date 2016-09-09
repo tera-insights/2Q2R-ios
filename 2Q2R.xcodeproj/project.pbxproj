@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		FE0D46961D6F64E700BE684A /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = FE0D46951D6F64E700BE684A /* GoogleService-Info.plist */; };
+		FE727F941D83151C001DDA30 /* KeyDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE727F931D83151C001DDA30 /* KeyDetails.swift */; };
 		FE8C3FAA1D6CCD50000892BC /* Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C3FA91D6CCD50000892BC /* Scan.swift */; };
 		FE8C3FAC1D6CFA3A000892BC /* KeyCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */; };
 		FE9878791D6E3B45001B103B /* SQLiteDB.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE9878761D6E3B45001B103B /* SQLiteDB.swift */; };
@@ -31,6 +32,7 @@
 		8F597250BE9D94FCFCC27FC2 /* Pods-2Q2R.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-2Q2R.release.xcconfig"; path = "Pods/Target Support Files/Pods-2Q2R/Pods-2Q2R.release.xcconfig"; sourceTree = "<group>"; };
 		AADED78D0209E6074F87F72B /* Pods-2Q2R.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-2Q2R.debug.xcconfig"; path = "Pods/Target Support Files/Pods-2Q2R/Pods-2Q2R.debug.xcconfig"; sourceTree = "<group>"; };
 		FE0D46951D6F64E700BE684A /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		FE727F931D83151C001DDA30 /* KeyDetails.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyDetails.swift; sourceTree = "<group>"; };
 		FE8C3FA91D6CCD50000892BC /* Scan.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scan.swift; sourceTree = "<group>"; };
 		FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCell.swift; sourceTree = "<group>"; };
 		FE9878751D6E3B45001B103B /* Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Bridging-Header.h"; sourceTree = "<group>"; };
@@ -100,6 +102,7 @@
 				FEA10E2D1D6C99D5002E13AB /* Main.swift */,
 				FE8C3FA91D6CCD50000892BC /* Scan.swift */,
 				FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */,
+				FE727F931D83151C001DDA30 /* KeyDetails.swift */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -297,6 +300,7 @@
 				FED1116B1D7755A100C3BA91 /* Empty.swift in Sources */,
 				FE8C3FAA1D6CCD50000892BC /* Scan.swift in Sources */,
 				FEA6A6EF1D6DFD870054073C /* Utils.swift in Sources */,
+				FE727F941D83151C001DDA30 /* KeyDetails.swift in Sources */,
 				FE9878791D6E3B45001B103B /* SQLiteDB.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
