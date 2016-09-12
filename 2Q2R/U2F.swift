@@ -118,7 +118,7 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
         let registrationData = NSMutableData()
         let bytesToSign = NSMutableData()
         
-        let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(challenge)\",\"origin\":\"\(info["baseURL"] as! String)\"}".asBase64(websafe: false)
+        let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(challenge)\",\"origin\":\"\(info["baseURL"] as! String)\"}"
         
         var futureUse: UInt8 = 0x00
         var reserved: UInt8 = 0x05
@@ -131,6 +131,8 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
         bytesToSign.appendData(clientData.sha256())
         bytesToSign.appendData(keyHandle)
         bytesToSign.appendData(keyRefs.publicKey)
+        
+        print("\nBytes to sign: \(bytesToSign)")
         
         if let signature = sign(bytes: bytesToSign, usingKeyWithAlias: keyRefs.privateAlias) {
             
@@ -151,7 +153,7 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
                     "type": "2q2r",
                     "deviceName": UIDevice.currentDevice().name,
                     "fcmToken": "",
-                    "clientData": clientData,
+                    "clientData": clientData.asBase64(websafe: false),
                     "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
                 ]
             ]
@@ -282,6 +284,7 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     
 }
 
+// CURRENTLY SIGNS PLAIN DATA (not hashed) FOR TESTING PURPOSES
 private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData? {
     
     let query = [
@@ -308,7 +311,7 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
     var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
     let signedHash = NSMutableData(length: signedHashLength)!
     
-    error = SecKeyRawSign(privateKey as! SecKeyRef, .PKCS1SHA256, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
+    error = SecKeyRawSign(privateKey as! SecKeyRef, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
     
     guard error == errSecSuccess else {
         
@@ -317,7 +320,7 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
         
     }
     
-    return signedHash.subdataWithRange(NSMakeRange(0, 71))
+    return signedHash.subdataWithRange(NSMakeRange(0, signedHashLength))
     
 }
 
