@@ -24,6 +24,7 @@
 		FEA10E361D6C99D5002E13AB /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FEA10E341D6C99D5002E13AB /* LaunchScreen.storyboard */; };
 		FEA6A6EC1D6DE2490054073C /* U2F.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA6A6EB1D6DE2490054073C /* U2F.swift */; };
 		FEA6A6EF1D6DFD870054073C /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEA6A6EE1D6DFD870054073C /* Utils.swift */; };
+		FECFC74E1D86391800DC8FA0 /* LocalAuthentication.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FECFC74D1D86391800DC8FA0 /* LocalAuthentication.framework */; };
 		FED1116B1D7755A100C3BA91 /* Empty.swift in Sources */ = {isa = PBXBuildFile; fileRef = FED1116A1D7755A100C3BA91 /* Empty.swift */; };
 /* End PBXBuildFile section */
 
@@ -51,6 +52,7 @@
 		FEA10E371D6C99D5002E13AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		FEA6A6EB1D6DE2490054073C /* U2F.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = U2F.swift; sourceTree = "<group>"; };
 		FEA6A6EE1D6DFD870054073C /* Utils.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		FECFC74D1D86391800DC8FA0 /* LocalAuthentication.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = LocalAuthentication.framework; path = System/Library/Frameworks/LocalAuthentication.framework; sourceTree = SDKROOT; };
 		FED1116A1D7755A100C3BA91 /* Empty.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Empty.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -59,6 +61,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FECFC74E1D86391800DC8FA0 /* LocalAuthentication.framework in Frameworks */,
 				FE98787D1D6E3C1B001B103B /* libsqlite3.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -78,6 +81,7 @@
 		FE0D46971D6F64FB00BE684A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FECFC74D1D86391800DC8FA0 /* LocalAuthentication.framework */,
 				FE98787C1D6E3C1B001B103B /* libsqlite3.tbd */,
 				6B532024FFB6B6193D611F9F /* Pods_2Q2R.framework */,
 			);
@@ -107,7 +111,7 @@
 			name = Controllers;
 			sourceTree = "<group>";
 		};
-		FE9878741D6E3B07001B103B /* SQLite */ = {
+		FE9878741D6E3B07001B103B /* Third Party */ = {
 			isa = PBXGroup;
 			children = (
 				FE9878751D6E3B45001B103B /* Bridging-Header.h */,
@@ -115,7 +119,7 @@
 				FE9878771D6E3B45001B103B /* SQLTable.swift */,
 				FE9878781D6E3B45001B103B /* String-Extras.swift */,
 			);
-			name = SQLite;
+			name = "Third Party";
 			sourceTree = "<group>";
 		};
 		FEA10E1F1D6C99D5002E13AB = {
@@ -139,7 +143,7 @@
 		FEA10E2A1D6C99D5002E13AB /* 2Q2R */ = {
 			isa = PBXGroup;
 			children = (
-				FE9878741D6E3B07001B103B /* SQLite */,
+				FE9878741D6E3B07001B103B /* Third Party */,
 				FEA6A6ED1D6DE5C30054073C /* Utils */,
 				FE8C3FA41D6CA6B6000892BC /* Controllers */,
 				FE0D46981D6F67A300BE684A /* Resources */,
@@ -424,6 +428,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.terainsights.a2Q2R;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "2Q2R/Bridging-Header.h";
 			};
 			name = Debug;
@@ -440,6 +445,7 @@
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.terainsights.a2Q2R;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_INCLUDE_PATHS = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "2Q2R/Bridging-Header.h";
 			};
 			name = Release;

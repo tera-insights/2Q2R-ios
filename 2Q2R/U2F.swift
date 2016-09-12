@@ -10,6 +10,7 @@
 import UIKit
 import Security
 import Firebase
+import LocalAuthentication
 
 private var cache: [String:String] = [:]
 private let keyHandleLength: UInt8 = 16
@@ -117,16 +118,13 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
         let registrationData = NSMutableData()
         let bytesToSign = NSMutableData()
         
-        let p256Header: [UInt8] = [0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x02, 0x01, 0x06, 0x08, 0x2A, 0x86, 0x48, 0xCE, 0x3D, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00]
-        let x509DER = NSMutableData(bytes: p256Header, length: p256Header.count)
-        x509DER.appendData(keyRefs.publicKey)
-        
-        let clientData = "\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(challenge)\",\"origin\":\"\(info["baseURL"] as! String)\"".asBase64(websafe: false)
+        let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(challenge)\",\"origin\":\"\(info["baseURL"] as! String)\"}".asBase64(websafe: false)
         
         var futureUse: UInt8 = 0x00
         var reserved: UInt8 = 0x05
         let keyHandle = decodeFromWebsafeBase64(keyRefs.privateAlias)
-        var keyHandleLength: UInt8 = UInt8(keyHandle.length)
+        var keyHandleLength = UInt8(keyHandle.length)
+        let x509Certificate = generateX509(forKey: keyRefs.publicKey)
         
         bytesToSign.appendBytes(&futureUse, length: 1)
         bytesToSign.appendData((info["appID"] as! String).sha256())
@@ -138,10 +136,14 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
             
             registrationData.appendBytes(&reserved, length: sizeofValue(reserved))
             registrationData.appendData(keyRefs.publicKey)
-            registrationData.appendBytes(&keyHandleLength, length: sizeofValue(keyHandleLength))
+            print("\nKey handle length: \(keyHandleLength), key handle: \(keyHandle)")
+            registrationData.appendBytes(&keyHandleLength, length: 1)
             registrationData.appendData(keyHandle)
-            registrationData.appendData(x509DER)
+            registrationData.appendData(x509Certificate)
+            print("Certificate: \(x509Certificate)")
             registrationData.appendData(signature)
+            
+            print("\nRegistration data: \(registrationData)")
             
             let registration: [String:AnyObject] = [
                 "successful": true,
@@ -153,8 +155,6 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
                     "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
                 ]
             ]
-            
-            print(registration["data"]!["registrationData"]!)
             
             do {
                 
@@ -193,7 +193,26 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
 
 private func authenticate(appID appID: String, challenge: String, keyID: String, baseURL: String) {
     
+    let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(challenge)\",\"origin\":\"\(baseURL)\"}"
     
+    let dataToBeSigned = NSMutableData()
+    
+    // TODO: sign U2F data
+    
+    if let signedData = sign(bytes: dataToBeSigned, usingKeyWithAlias: keyID) {
+        
+        let registrationData = NSMutableData()
+        
+        let userPresence: UInt8 = 0x1
+        let counter: UInt32 = UInt32(getCounter(forKey: keyID)!)
+        
+        
+        
+    } else {
+        
+        print("Failed to sign authentication data.")
+        
+    }
     
 }
 
@@ -299,6 +318,26 @@ private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData
     }
     
     return signedHash.subdataWithRange(NSMakeRange(0, 71))
+    
+}
+
+
+// Very hacky--we gutted everything but the public key bytes from
+// a successful Android certificate and simply insert new public
+// key bytes into that template.
+private func generateX509(forKey key: NSData) -> NSData {
+    
+    let certificate = NSMutableData()
+    
+    let certBeginning: [UInt8] = [0x30, 0x81, 0xc5, 0x30, 0x81, 0xb1, 0xa0, 0x03, 0x02, 0x01, 0x02, 0x02, 0x01, 0x01, 0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x30, 0x0f, 0x31, 0x0d, 0x30, 0x0b, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x04, 0x66, 0x61, 0x6b, 0x65, 0x30, 0x1e, 0x17, 0x0d, 0x37, 0x30, 0x30, 0x31, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x5a, 0x17, 0x0d, 0x34, 0x38, 0x30, 0x31, 0x30, 0x31, 0x30, 0x30, 0x30, 0x30, 0x30, 0x30, 0x5a, 0x30, 0x0f, 0x31, 0x0d, 0x30, 0x0b, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x04, 0x66, 0x61, 0x6b, 0x65, 0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07, 0x03, 0x42, 0x00]
+    
+    let certEnd: [UInt8] = [0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x03, 0x03, 0x00, 0x30, 0x00]
+    
+    certificate.appendBytes(certBeginning, length: certBeginning.count)
+    certificate.appendData(key)
+    certificate.appendBytes(certEnd, length: certEnd.count)
+    
+    return certificate
     
 }
 
