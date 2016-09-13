@@ -8,10 +8,21 @@
 
 import UIKit
 
-class Main: UITableViewController {
+var keyTable: UITableView?
+var recentKeys: [[String:AnyObject]] = getRecentKeys()
+var allKeys: [[String:AnyObject]] = getAllKeys() {
     
-    var recentKeys: [[String:AnyObject]] = getRecentKeys()
-    var allKeys: [[String:AnyObject]] = getAllKeys()
+    didSet {
+        
+        keyTable?.reloadData()
+        keyTable?.setNeedsDisplay()
+        print("Keys updated!")
+        
+    }
+    
+}
+
+class Main: UITableViewController {
     
     @IBAction func onAboutAction(sender: AnyObject) {
         
@@ -32,6 +43,8 @@ class Main: UITableViewController {
         
         super.viewDidLoad()
         
+        keyTable = self.tableView
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -44,6 +57,8 @@ class Main: UITableViewController {
         if allKeys.count == 0 {
             tableView.backgroundView = self.storyboard?.instantiateViewControllerWithIdentifier("emptyKeyView").view
             return 0
+        } else {
+            tableView.backgroundView = nil
         }
         
         return allKeys.count > 5 ? 2 : 1
@@ -81,7 +96,18 @@ class Main: UITableViewController {
         let keyDesc = (indexPath.section == 0 ? recentKeys[indexPath.row] : allKeys[indexPath.row])
         let keyDetailsView = storyboard?.instantiateViewControllerWithIdentifier("keyDetails") as! KeyDetails
         
-        let dateTimeUsed = keyDesc["used"] as! NSDate
+        var dateTimeUsed = keyDesc["used"] as! NSDate
+        let components = NSDateComponents()
+        let calendar = NSCalendar.currentCalendar()
+        
+        components.day = calendar.component(.Day, fromDate: dateTimeUsed)
+        components.month = calendar.component(.Month, fromDate: dateTimeUsed)
+        components.year = calendar.component(.Year, fromDate: dateTimeUsed)
+        components.hour = calendar.component(.Hour, fromDate: dateTimeUsed)
+        components.minute = calendar.component(.Minute, fromDate: dateTimeUsed)
+        
+        dateTimeUsed = calendar.dateFromComponents(components)!
+        
         let formatter = NSDateFormatter()
         
         formatter.dateStyle = .LongStyle

@@ -9,8 +9,6 @@
 import UIKit
 import Firebase
 
-var applicationWindow: UIWindow?
-
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
@@ -21,7 +19,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Configure Firebase
         //FIRApp.configure()
         
-        applicationWindow = window
+        // Prep the U2F database
+        database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
+        database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
         
         return true
     }

@@ -44,7 +44,7 @@ extension String {
     
 }
 
-func decodeFromWebsafeBase64(websafeString: String) -> NSData {
+func decodeFromWebsafeBase64ToBase64Data(websafeString: String) -> NSData {
     
     var base64String = websafeString.stringByReplacingOccurrencesOfString("-", withString: "+").stringByReplacingOccurrencesOfString("_", withString: "/")
     
@@ -61,7 +61,71 @@ func decodeFromWebsafeBase64(websafeString: String) -> NSData {
     
 }
 
+func decodeFromWebsafeBase64ToBase64String(websafeString: String) -> String {
+    
+    var base64String = websafeString.stringByReplacingOccurrencesOfString("-", withString: "+").stringByReplacingOccurrencesOfString("_", withString: "/")
+    
+    switch base64String.characters.count % 3 {
+    case 1:
+        base64String.appendContentsOf("==")
+    case 2:
+        base64String.appendContentsOf("=")
+    default:
+        break
+    }
+    
+    return base64String
+    
+}
+
 infix operator =~ {}
 func =~ (input: String, pattern: String) -> Bool {
     return input.rangeOfString(pattern, options: .RegularExpressionSearch) != nil
 }
+
+func sendJSONToURL(urlString: String, json: [String:AnyObject]?, method: String, responseHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
+    
+    do {
+        
+        if let url = NSURL(string: urlString) {
+            
+            let req = NSMutableURLRequest(URL: url)
+            req.HTTPMethod = method
+            
+            if method == "POST" && json != nil {
+                
+                req.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
+                req.HTTPBody = try NSJSONSerialization.dataWithJSONObject(json!, options: NSJSONWritingOptions(rawValue: 0))
+                
+            }
+            
+            let registrationTask = NSURLSession.sharedSession().dataTaskWithRequest(req, completionHandler: responseHandler)
+            registrationTask.resume()
+            
+        } else {
+            
+            print("Incorrectly formatted URL.")
+            
+        }
+        
+    } catch {
+        
+        print("Incorrectly formatted JSON.")
+        
+    }
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+

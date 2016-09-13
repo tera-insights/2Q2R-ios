@@ -27,13 +27,9 @@ func processU2F(message content: String) {
         cache["infoURL"] = args[2]
         cache["userID"] = args[3]
         
-        let req = NSMutableURLRequest(URL: NSURL(string: cache["infoURL"]!)!)
-        req.HTTPMethod = "GET"
-        
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) {
             
-            let infoTask = NSURLSession.sharedSession().dataTaskWithRequest(req, completionHandler: infoResponseHandler)
-            infoTask.resume()
+            sendJSONToURL(cache["infoURL"]!, json: nil, method: "GET", responseHandler: infoResponseHandler)
             
         }
         
@@ -41,12 +37,20 @@ func processU2F(message content: String) {
         
         let args = content.componentsSeparatedByString(" ")
         let serverInfo = getInfo(forServer: args[1])
-        cache["serverCounter"] = args[4]
-        cache["appName"] = serverInfo?.appName
+        
+        guard Int(args[4]) >= getCounter(forKey: args[3]) else {
+            
+            print("Reused authentication request! Stopping authentication.")
+            return
+            
+        }
         
         if let info = serverInfo {
             
-            authenticate(appID: args[1], challenge: args[2], keyID: args[3], baseURL: info.baseURL)
+            cache["appName"] = info.appName
+            cache["keyID"] = decodeFromWebsafeBase64ToBase64String(args[3])
+            
+            authenticate(appID: args[1], challenge: args[2], keyID: cache["keyID"]!, counter: args[4], baseURL: info.baseURL)
             
         } else {
             
@@ -78,8 +82,8 @@ private func checkValid(qr qr: String) -> Type {
             if qrArgs.count != 4 {
                 print("Incorrect number of arguments.")
                 break
-            } else if decodeFromWebsafeBase64(qrArgs[1]).length != 32 {
-                print("Challenge of incorrect length: \(decodeFromWebsafeBase64(qrArgs[1]).length) bytes.")
+            } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length != 32 {
+                print("Challenge of incorrect length: \(decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length) bytes.")
                 break
             } else if qrArgs[2] =~ "[a-zA-Z0-9:/.]+" {
                 return .REG
@@ -87,9 +91,9 @@ private func checkValid(qr qr: String) -> Type {
         case "A":
             if qrArgs.count != 5 {
                 break
-            } else if decodeFromWebsafeBase64(qrArgs[1]).length != 32 {
+            } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length != 32 {
                 break
-            } else if decodeFromWebsafeBase64(qrArgs[2]).length != 32 {
+            } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[2]).length != 32 {
                 break
             } else if Int(qrArgs[4]) != nil {
                 return .AUTH
@@ -122,7 +126,7 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
         
         var futureUse: UInt8 = 0x00
         var reserved: UInt8 = 0x05
-        let keyHandle = decodeFromWebsafeBase64(keyRefs.privateAlias)
+        let keyHandle = decodeFromWebsafeBase64ToBase64Data(keyRefs.privateAlias)
         var keyHandleLength = UInt8(keyHandle.length)
         let x509Certificate = generateX509(forKey: keyRefs.publicKey)
         
@@ -158,34 +162,15 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
                 ]
             ]
             
-            do {
-                
-                let json = try NSJSONSerialization.dataWithJSONObject(registration, options: NSJSONWritingOptions(rawValue: 0))
-                
-                let baseURL = info["baseURL"] as! String
-                let regURL = baseURL + (baseURL.substringFromIndex(baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
+            cache["appID"] = info["appID"] as? String
+            cache["appName"] = info["appName"] as? String
+            cache["baseURL"] = info["baseURL"] as? String
+            cache["keyID"] = keyRefs.privateAlias
             
-                if let url = NSURL(string: regURL) {
-                    
-                    let req = NSMutableURLRequest(URL: url)
-                    req.HTTPMethod = "POST"
-                    req.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-                    req.HTTPBody = json
-                    
-                    let registrationTask = NSURLSession.sharedSession().dataTaskWithRequest(req, completionHandler: registrationResponseHandler)
-                    registrationTask.resume()
-                    
-                } else {
-                    
-                    print("Incorrectly formatted base URL from server.")
-                    
-                }
-                
-            } catch {
-                
-                print("Failed to produce registration response JSON!")
-                
-            }
+            let baseURL = info["baseURL"] as! String
+            let regURL = baseURL + (baseURL.substringFromIndex(baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
+            
+            sendJSONToURL(regURL, json: registration, method: "POST", responseHandler: registrationResponseHandler)
             
         }
         
@@ -193,22 +178,41 @@ private func register(challenge challenge: String, serverInfo info: [String:AnyO
     
 }
 
-private func authenticate(appID appID: String, challenge: String, keyID: String, baseURL: String) {
+private func authenticate(appID appID: String, challenge: String, keyID: String, counter: String, baseURL: String) {
     
     let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(challenge)\",\"origin\":\"\(baseURL)\"}"
     
     let dataToBeSigned = NSMutableData()
     
-    // TODO: sign U2F data
+    let applicationParameter: NSData = appID.sha256()
+    var userPresence: UInt8 = 0x1
+    var counterBytes: UInt32 = UInt32(counter)!
+    let challengeParameter: NSData = clientData.sha256()
+    
+    dataToBeSigned.appendData(applicationParameter)
+    dataToBeSigned.appendBytes(&userPresence, length: sizeof(UInt8))
+    dataToBeSigned.appendBytes(&counterBytes, length: sizeof(UInt32))
+    dataToBeSigned.appendData(challengeParameter)
     
     if let signedData = sign(bytes: dataToBeSigned, usingKeyWithAlias: keyID) {
         
-        let registrationData = NSMutableData()
+        let authenticationData = NSMutableData()
         
-        let userPresence: UInt8 = 0x1
-        let counter: UInt32 = UInt32(getCounter(forKey: keyID)!)
+        authenticationData.appendBytes(&userPresence, length: sizeof(UInt8))
+        authenticationData.appendBytes(&counterBytes, length: sizeof(UInt32))
+        authenticationData.appendData(signedData)
         
+        let authenticationResponse: [String:AnyObject] = [
+            "successful": true,
+            "data": [
+                "clientData": clientData.asBase64(websafe: false),
+                "signatureData": authenticationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+            ]
+        ]
         
+        let authenticationURL = baseURL + (baseURL.substringFromIndex(baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
+        
+        sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST", responseHandler: authenticationResponseHandler)
         
     } else {
         
@@ -273,6 +277,7 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     
     if let pubKey = pubKeyOpt as? NSData where err == errSecSuccess {
         
+        print("\nGenerated private key with alias: \"\(alias)\"")
         return (alias, pubKey)
         
     } else {
@@ -284,7 +289,7 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     
 }
 
-// CURRENTLY SIGNS PLAIN DATA (not hashed) FOR TESTING PURPOSES
+// USES PKCS1 PADDING
 private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData? {
     
     let query = [
@@ -380,6 +385,9 @@ private func registrationResponseHandler(data: NSData?, response: NSURLResponse?
         
         displayText(withTitle: cache["appName"], withMessage: "Registration approved!")
         
+        recentKeys = getRecentKeys()
+        allKeys = getAllKeys()
+        
     } else {
     
         displayText(withTitle: cache["appName"], withMessage: "Registration declined.")
@@ -419,7 +427,8 @@ private func displayText(withTitle title: String?, withMessage message: String?)
         let okayAction = UIAlertAction(title: "Okay", style: .Cancel, handler: nil)
         alert.addAction(okayAction)
         
-        applicationWindow!.rootViewController?.presentViewController(alert, animated: true, completion: nil)
+        UIApplication.sharedApplication().windows[0].rootViewController?.presentViewController(alert, animated: true, completion: nil)
+
         
     }
     
