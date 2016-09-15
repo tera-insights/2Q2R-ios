@@ -48,9 +48,10 @@ func processU2F(message content: String) {
         if let info = serverInfo {
             
             cache["appName"] = info.appName
-            cache["keyID"] = decodeFromWebsafeBase64ToBase64String(args[3])
+            cache["keyID"] = args[3]
+            cache["counter"] = args[4]
             
-            authenticate(appID: args[1], challenge: args[2], keyID: cache["keyID"]!, counter: args[4], baseURL: info.baseURL)
+            authenticate(appID: args[1], challenge: args[2], keyID: args[3], counter: args[4], baseURL: info.baseURL)
             
         } else {
             
@@ -229,7 +230,8 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     var randomBytes = [UInt8](count: numBytes, repeatedValue: 0)
     SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
     let data = NSData(bytes: &randomBytes, length: numBytes)
-    let alias = data.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+    var alias = data.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+    alias.makeWebsafe()
     
     let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .TouchIDCurrentSet, nil)!
     
@@ -289,7 +291,6 @@ private func genKeyPair() -> (privateAlias: String, publicKey: NSData)? {
     
 }
 
-// USES PKCS1 PADDING
 private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData? {
     
     let query = [
@@ -402,7 +403,8 @@ private func authenticationResponseHandler(data: NSData?, response: NSURLRespons
     
     if status == 200 {
         
-        setCounter(forKey: cache["keyID"]!, to: Int(cache["serverCounter"]!)!)
+        setCounter(forKey: cache["keyID"]!, to: Int(cache["counter"]!)!)
+        print("Counter set to: \(database.query("SELECT counter FROM keys WHERE keyID = '\(cache["keyID"]!)';")[0]["counter"]!)")
         
         displayText(withTitle: cache["appName"], withMessage: "Authentication approved!")
         
@@ -433,9 +435,6 @@ private func displayText(withTitle title: String?, withMessage message: String?)
     }
     
 }
-
-
-
 
 
 

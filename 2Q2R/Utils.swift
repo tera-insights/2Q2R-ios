@@ -31,6 +31,12 @@ extension String {
         
     }
     
+    mutating func makeWebsafe() {
+        
+        self = self.stringByReplacingOccurrencesOfString("+", withString: "-").stringByReplacingOccurrencesOfString("/", withString: "_").stringByReplacingOccurrencesOfString("=", withString: "")
+        
+    }
+    
     func sha256() -> NSData {
         
         let data = self.dataUsingEncoding(NSUTF8StringEncoding)!
