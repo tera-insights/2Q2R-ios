@@ -91,7 +91,7 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
                     
                     shouldReceiveInput = false
                     navigationController?.popViewControllerAnimated(true)
-                    processU2F(message: message)
+                    process2Q2RRequest(message)?.execute()
                     
                 }
                 

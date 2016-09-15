@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 enum Type {
     case AUTH, REG, INVALID
@@ -117,6 +118,38 @@ func sendJSONToURL(urlString: String, json: [String:AnyObject]?, method: String,
     } catch {
         
         print("Incorrectly formatted JSON.")
+        
+    }
+    
+}
+
+func getCurrentDateTime() -> NSDate {
+    
+    let now = NSDate()
+    let components = NSDateComponents()
+    let calendar = NSCalendar.currentCalendar()
+    
+    components.day = calendar.component(.Day, fromDate: now)
+    components.month = calendar.component(.Month, fromDate: now)
+    components.year = calendar.component(.Year, fromDate: now)
+    components.hour = calendar.component(.Hour, fromDate: now)
+    components.minute = calendar.component(.Minute, fromDate: now)
+    
+    return calendar.dateFromComponents(components)!
+    
+}
+
+func displayError(error: SecError, withTitle title: String) {
+    
+    dispatch_async(dispatch_get_main_queue()) {
+        
+        let alert = UIAlertController(title: title, message: error.description(), preferredStyle: .Alert)
+        
+        let okayAction = UIAlertAction(title: "Okay", style: .Cancel, handler: nil)
+        alert.addAction(okayAction)
+        
+        UIApplication.sharedApplication().windows[0].rootViewController?.presentViewController(alert, animated: true, completion: nil)
+        
         
     }
     

@@ -96,17 +96,7 @@ class Main: UITableViewController {
         let keyDesc = (indexPath.section == 0 ? recentKeys[indexPath.row] : allKeys[indexPath.row])
         let keyDetailsView = storyboard?.instantiateViewControllerWithIdentifier("keyDetails") as! KeyDetails
         
-        var dateTimeUsed = keyDesc["used"] as! NSDate
-        let components = NSDateComponents()
-        let calendar = NSCalendar.currentCalendar()
-        
-        components.day = calendar.component(.Day, fromDate: dateTimeUsed)
-        components.month = calendar.component(.Month, fromDate: dateTimeUsed)
-        components.year = calendar.component(.Year, fromDate: dateTimeUsed)
-        components.hour = calendar.component(.Hour, fromDate: dateTimeUsed)
-        components.minute = calendar.component(.Minute, fromDate: dateTimeUsed)
-        
-        dateTimeUsed = calendar.dateFromComponents(components)!
+        let dateTimeUsed = keyDesc["used"] as! NSDate
         
         let formatter = NSDateFormatter()
         

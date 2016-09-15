@@ -13,12 +13,7 @@ let database = SQLiteDB.sharedInstance
 
 func insertNewKey(keyID: String, appID: String, userID: String) {
     
-    let formatter = NSDateFormatter()
-    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-    
-    let dt = formatter.stringFromDate(NSDate())
-    
-    database.execute("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(dt)');")
+    database.execute("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(getCurrentDateTime())');")
     
 }
 
@@ -73,7 +68,7 @@ func getCounter(forKey keyID: String) -> Int? {
 
 func setCounter(forKey keyID: String, to counter: Int) {
     
-    database.execute("UPDATE keys SET counter = '\(counter)', used = '\(NSDate())' WHERE keyID = '\(keyID)';")
+    database.execute("UPDATE keys SET counter = '\(counter)', used = '\(getCurrentDateTime())' WHERE keyID = '\(keyID)';")
     
 }
 
