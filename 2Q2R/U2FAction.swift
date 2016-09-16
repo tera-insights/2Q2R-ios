@@ -145,7 +145,15 @@ class U2FActionRegister: U2FAction {
                         
                     } else {
                     
-                        self.sendRegistrationResponse()
+                        confirmResponseFromBackgroundThread(.Register, challenge: self.challenge, appName: self.appName, userID: self.userID) { (approved) in
+                            
+                            if approved {
+                                
+                                self.sendRegistrationResponse()
+                                
+                            }
+                            
+                        }
                         
                     }
                     
@@ -340,11 +348,13 @@ class U2FActionRegister: U2FAction {
                     "data": [
                         "type": "2q2r",
                         "deviceName": UIDevice.currentDevice().name,
-                        "fcmToken": "",
+                        "fcmToken": FIRInstanceID.instanceID().token()!,
                         "clientData": clientData.asBase64(websafe: false),
                         "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
                     ]
                 ]
+                
+                print("FCM Token: \"\(FIRInstanceID.instanceID().token()!)\"")
                 
                 let regURL = self.baseURL + (self.baseURL.substringFromIndex(self.baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
                 
@@ -400,6 +410,8 @@ class U2FActionAuthenticate: U2FAction {
         self.keyID = keyID
         self.counter = counter
         
+        print("Counter: \(self.counter)")
+        
     }
     
     func execute() {
@@ -411,7 +423,19 @@ class U2FActionAuthenticate: U2FAction {
                 self.appName = serverInfo.appName
                 self.baseURL = serverInfo.baseURL
                 
-                self.sendAuthenticationResponse()
+                if let userID = getUserID(forKey: self.keyID) {
+                    
+                    confirmResponseFromBackgroundThread(.Authenticate, challenge: self.challenge, appName: self.appName, userID: userID) { (approved) in
+                        
+                        if approved {
+                            
+                            self.sendAuthenticationResponse()
+                            
+                        }
+                        
+                    }
+                    
+                }
                 
             } else {
                 
@@ -490,6 +514,7 @@ class U2FActionAuthenticate: U2FAction {
         let applicationParameter: NSData = self.appID.sha256()
         var userPresence: UInt8 = 0x1
         var counterBytes: UInt32 = UInt32(self.counter)
+        print("Counter bytes: \(counterBytes)")
         let challengeParameter: NSData = clientData.sha256()
         
         dataToBeSigned.appendData(applicationParameter)
@@ -519,12 +544,14 @@ class U2FActionAuthenticate: U2FAction {
                 
                 if let res = response as? NSHTTPURLResponse {
                     
-                    let status = (response as! NSHTTPURLResponse).statusCode
+                    let status = res.statusCode
                     
                     switch status {
                         case 200:
                             setCounter(forKey: self.keyID, to: self.counter)
                             displayError(.AuthenticationSuccess, withTitle: self.appName)
+                            recentKeys = getRecentKeys()
+                            allKeys = getAllKeys()
                         case 401:
                             displayError(.AuthenticationDeclined, withTitle: self.appName)
                         case 408:

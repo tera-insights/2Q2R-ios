@@ -155,6 +155,27 @@ func displayError(error: SecError, withTitle title: String) {
     
 }
 
+func confirmResponseFromBackgroundThread(type: ReqType, challenge: String, appName: String, userID: String, onResult: (approved: Bool) -> Void) {
+    
+    dispatch_async(dispatch_get_main_queue()) {
+    
+        let custom = UIApplication.sharedApplication().windows[0].rootViewController?.storyboard?.instantiateViewControllerWithIdentifier("reqDialog") as! U2FRequestDialog
+        
+        custom.type = type
+        custom.challenge = challenge
+        custom.appName = appName
+        custom.userID = userID
+        custom.resultHandler = { (approved: Bool) in dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) { onResult(approved: approved) } }
+        
+        custom.modalPresentationStyle = .Popover
+        custom.modalTransitionStyle = .CoverVertical
+        
+        UIApplication.sharedApplication().windows[0].rootViewController?.presentViewController(custom, animated: true, completion: nil)
+        
+    }
+    
+}
+
 
 
 

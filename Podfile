@@ -6,6 +6,7 @@ target '2Q2R' do
   use_frameworks!
 
   # Pods for 2Q2R
-  pod ‘Firebase’
+  pod ‘Firebase/Core’
+  pod ‘Firebase/Messaging’
 
 end

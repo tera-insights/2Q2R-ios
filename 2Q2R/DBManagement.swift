@@ -30,6 +30,22 @@ func userIsAlreadyRegistered(userID: String, forServer appID: String) -> Bool {
     
 }
 
+func getUserID(forKey keyID: String) -> String? {
+    
+    let query = database.query("SELECT userID FROM keys WHERE keyID = '\(keyID)';")
+    
+    if query.count == 1 {
+        
+        return query[0]["userID"] as? String
+        
+    } else {
+        
+        return nil
+        
+    }
+    
+}
+
 func getInfo(forServer appID: String) -> (appName: String, baseURL: String)? {
     
     let info = database.query("SELECT appName, baseURL FROM servers WHERE appID = '\(appID)';")

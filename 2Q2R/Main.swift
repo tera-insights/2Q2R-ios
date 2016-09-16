@@ -14,8 +14,13 @@ var allKeys: [[String:AnyObject]] = getAllKeys() {
     
     didSet {
         
-        keyTable?.reloadData()
-        keyTable?.setNeedsDisplay()
+        dispatch_async(dispatch_get_main_queue()) {
+        
+            keyTable?.reloadData()
+            keyTable?.setNeedsDisplay()
+        
+        }
+
         print("Keys updated!")
         
     }

@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import FirebaseMessaging
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -16,8 +17,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(application: UIApplication, didFinishLaunchingWithOptions launchOptions: [NSObject: AnyObject]?) -> Bool {
         
-        // Configure Firebase
-        //FIRApp.configure()
+        // Configure firebase
+        if #available(iOS 10.0, *) {
+            
+            
+            
+        } else {
+            
+            let settings: UIUserNotificationSettings = UIUserNotificationSettings(forTypes: [.Alert, .Badge, .Sound], categories: nil)
+            application.registerUserNotificationSettings(settings)
+            application.registerForRemoteNotifications()
+            
+        }
+        
+        FIRApp.configure()
+        
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(self.tokenRefreshHandler(_:)), name: kFIRInstanceIDTokenRefreshNotification, object: nil)
         
         // Prep the U2F database
         database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
@@ -32,8 +47,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidEnterBackground(application: UIApplication) {
-        // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
-        // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
+        
+        FIRMessaging.messaging().disconnect()
+        print("Disconnected from FCM.")
+        
     }
 
     func applicationWillEnterForeground(application: UIApplication) {
@@ -41,13 +58,55 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        
+        connectToFCM()
+        
     }
 
     func applicationWillTerminate(application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
     }
-
+    
+    func connectToFCM() {
+        
+        FIRMessaging.messaging().connectWithCompletion() { (error) in
+            
+            print(error == nil ? "Connected to FCM." : "Unable to connect to FCM, error: \(error)")
+            
+        }
+        
+    }
+    
+    func tokenRefreshHandler(notification: NSNotification) {
+        
+        //if let token = FIRInstanceID.instanceID().token() {
+            
+            // Send new token to all registered servers.
+            
+        //}
+        
+        connectToFCM()
+        
+    }
+    
+    func application(application: UIApplication, didReceiveRemoteNotification userInfo: [NSObject : AnyObject], fetchCompletionHandler completionHandler: (UIBackgroundFetchResult) -> Void) {
+    
+        print(userInfo)
+        process2Q2RRequest(userInfo	["authData"] as! String)?.execute()
+        
+    }
 
 }
+
+extension AppDelegate: FIRMessagingDelegate {
+    
+    func applicationReceivedRemoteMessage(message: FIRMessagingRemoteMessage) {
+        
+        print(message.appData)
+        process2Q2RRequest(message.appData["authData"] as! String)?.execute()
+        
+    }
+    
+}
+
 

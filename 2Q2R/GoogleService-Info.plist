@@ -7,9 +7,9 @@
 	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
 	<string>ca-app-pub-3940256099942544/4411468910</string>
 	<key>CLIENT_ID</key>
-	<string>413156067606-fmju2dpbdlh33fob5scoue709779ts7m.apps.googleusercontent.com</string>
+	<string>413156067606-10ukaepc4g195alr74te3r4rsq302d48.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.413156067606-fmju2dpbdlh33fob5scoue709779ts7m</string>
+	<string>com.googleusercontent.apps.413156067606-10ukaepc4g195alr74te3r4rsq302d48</string>
 	<key>API_KEY</key>
 	<string>AIzaSyARb5Etn3Y_BYC-4aaR_PB0XxH85bSkJSw</string>
 	<key>GCM_SENDER_ID</key>
@@ -17,7 +17,7 @@
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.terainsights.a2Q2R</string>
+	<string>com.terainsights.2Q2R</string>
 	<key>PROJECT_ID</key>
 	<string>q2r-65607</string>
 	<key>STORAGE_BUCKET</key>
@@ -33,7 +33,7 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true/>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:413156067606:ios:4d400992b6eb87a7</string>
+	<string>1:413156067606:ios:c97cde9369345e30</string>
 	<key>DATABASE_URL</key>
 	<string>https://q2r-65607.firebaseio.com</string>
 </dict>
