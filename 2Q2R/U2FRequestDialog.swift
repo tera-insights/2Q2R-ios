@@ -32,7 +32,7 @@ class U2FRequestDialog: UIViewController {
         
         dismiss(animated: true) {
             
-            self.resultHandler(approved: true)
+            self.resultHandler(true)
             
         }
         
@@ -42,7 +42,7 @@ class U2FRequestDialog: UIViewController {
         
         dismiss(animated: true) {
             
-            self.resultHandler(approved: false)
+            self.resultHandler(false)
             
         }
         

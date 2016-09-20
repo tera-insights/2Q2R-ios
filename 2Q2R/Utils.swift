@@ -90,13 +90,13 @@ func =~ (input: String, pattern: String) -> Bool {
     return input.range(of: pattern, options: .regularExpression) != nil
 }
 
-func sendJSONToURL(_ urlString: String, json: [String:AnyObject]?, method: String, responseHandler: (Data?, URLResponse?, NSError?) -> Void) {
+func sendJSONToURL(_ urlString: String, json: [String:AnyObject]?, method: String, responseHandler: @escaping (Data?, URLResponse?, Error?) -> Void) {
     
     do {
         
         if let url = URL(string: urlString) {
             
-            let req = NSMutableURLRequest(url: url)
+            var req = URLRequest(url: url)
             req.httpMethod = method
             
             if method == "POST" && json != nil {

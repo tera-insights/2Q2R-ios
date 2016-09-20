@@ -126,7 +126,7 @@ class U2FActionRegister: U2FAction {
     
     fileprivate func fetchServerInfo() {
         
-        sendJSONToURL(infoURL, json: nil, method: "GET") { (data: Data?, response: URLResponse?, error: NSError?) in
+        sendJSONToURL(infoURL, json: nil, method: "GET") { (data: Data?, response: URLResponse?, error: Error?) in
             
             do {
                 
@@ -179,7 +179,7 @@ class U2FActionRegister: U2FAction {
         let numBytes = Int(U2FActionRegister.keyHandleLength)
         var randomBytes = [UInt8](repeating: 0, count: numBytes)
         SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
-        let data = Data(bytes: UnsafePointer<UInt8>(&randomBytes), count: numBytes)
+        let data = Data(bytes: randomBytes)
         var alias = data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
         alias.makeWebsafe()
         
@@ -197,14 +197,14 @@ class U2FActionRegister: U2FAction {
             kSecAttrLabel as String: "private",
             kSecAttrApplicationTag as String: alias,
             kSecAttrAccessControl as String: access
-        ]
+        ] as AnyObject
         
         // Public key parameters
         keyParams[kSecPublicKeyAttrs as String] = [
             kSecAttrIsPermanent as String: true,
             kSecAttrLabel as String: "public",
             kSecAttrApplicationTag as String: alias
-        ]
+        ] as AnyObject
         
         var pubKeyRef, privKeyRef: SecKey?
         var err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
@@ -217,15 +217,15 @@ class U2FActionRegister: U2FAction {
         }
         
         // Export the public key for application use
-        let query = [
+        let query: [String:AnyObject] = [
             kSecClass as String: kSecClassKey,
-            kSecAttrLabel as String: "public",
-            kSecAttrApplicationTag as String: alias,
+            kSecAttrLabel as String: "public" as AnyObject,
+            kSecAttrApplicationTag as String: alias as AnyObject,
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-            kSecReturnData as String: true
+            kSecReturnData as String: true as AnyObject
         ]
         var pubKeyOpt: AnyObject?
-        err = SecItemCopyMatching(query, &pubKeyOpt)
+        err = SecItemCopyMatching(query as CFDictionary, &pubKeyOpt)
         
         if let pubKey = pubKeyOpt as? Data , err == errSecSuccess {
             
@@ -285,13 +285,23 @@ class U2FActionRegister: U2FAction {
             
         }
         
-        let hashedData = NSMutableData(length: Int(CC_SHA256_DIGEST_LENGTH))!
-        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer(hashedData.mutableBytes))
+        var hashedDataPointer: UnsafePointer<UInt8>! = nil
+        var signedHashPointer: UnsafeMutablePointer<UInt8>! = nil
         
-        var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
-        let signedHash = NSMutableData(length: signedHashLength)!
+        var hashedData = Data(capacity: Int(CC_SHA256_DIGEST_LENGTH))
+        hashedData.withUnsafeMutableBytes() { mutableBytes in
+            hashedDataPointer = UnsafePointer<UInt8>(mutableBytes)
+        }
+        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer<UInt8>(mutating: hashedDataPointer))
         
-        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
+        var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
+        var signedHash = Data(capacity: signedHashLength)
+        
+        let _ = signedHash.withUnsafeMutableBytes() { mutableBytes in
+            signedHashPointer = UnsafeMutablePointer<UInt8>(mutableBytes)
+        }
+        
+        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer, hashedData.count, signedHashPointer, &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -310,7 +320,7 @@ class U2FActionRegister: U2FAction {
             
         }
         
-        return signedHash.subdata(with: NSMakeRange(0, signedHashLength))
+        return signedHash.subdata(in: 0..<signedHashLength)
         
     }
     
@@ -351,14 +361,14 @@ class U2FActionRegister: U2FAction {
                         "fcmToken": FIRInstanceID.instanceID().token()!,
                         "clientData": clientData.asBase64(websafe: false),
                         "registrationData": registrationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                    ]
+                    ] as AnyObject
                 ]
                 
                 print("FCM Token: \"\(FIRInstanceID.instanceID().token()!)\"")
                 
                 let regURL = self.baseURL + (self.baseURL.substring(from: self.baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
                 
-                sendJSONToURL(regURL, json: registration, method: "POST") { (data: Data?, response: URLResponse?, error: NSError?) in
+                sendJSONToURL(regURL, json: registration, method: "POST") { (data: Data?, response: URLResponse?, error: Error?) in
                     
                     let status = (response as! HTTPURLResponse).statusCode
                     
@@ -455,7 +465,7 @@ class U2FActionAuthenticate: U2FAction {
             kSecAttrApplicationTag as String: alias,
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
             kSecReturnRef as String: true
-        ] as [String : Any]
+            ] as [String : Any]
         
         var privateKey: AnyObject?
         var error = SecItemCopyMatching(query as CFDictionary, &privateKey)
@@ -476,13 +486,23 @@ class U2FActionAuthenticate: U2FAction {
             
         }
         
-        let hashedData = NSMutableData(length: Int(CC_SHA256_DIGEST_LENGTH))!
-        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer(hashedData.mutableBytes))
+        var hashedDataPointer: UnsafePointer<UInt8>! = nil
+        var signedHashPointer: UnsafeMutablePointer<UInt8>! = nil
         
-        var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
-        let signedHash = NSMutableData(length: signedHashLength)!
+        var hashedData = Data(capacity: Int(CC_SHA256_DIGEST_LENGTH))
+        hashedData.withUnsafeMutableBytes() { mutableBytes in
+            hashedDataPointer = UnsafePointer<UInt8>(mutableBytes)
+        }
+        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer<UInt8>(mutating: hashedDataPointer))
         
-        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
+        var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
+        var signedHash = Data(capacity: signedHashLength)
+        
+        let _ = signedHash.withUnsafeMutableBytes() { mutableBytes in
+            signedHashPointer = UnsafeMutablePointer<UInt8>(mutableBytes)
+        }
+        
+        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer, hashedData.count, signedHashPointer, &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -501,7 +521,7 @@ class U2FActionAuthenticate: U2FAction {
             
         }
         
-        return signedHash.subdata(with: NSMakeRange(0, signedHashLength))
+        return signedHash.subdata(in: 0..<signedHashLength)
         
     }
     
@@ -535,12 +555,12 @@ class U2FActionAuthenticate: U2FAction {
                 "data": [
                     "clientData": clientData.asBase64(websafe: false),
                     "signatureData": authenticationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                ]
+                    ] as AnyObject
             ]
             
             let authenticationURL = baseURL + (baseURL.substring(from: baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
             
-            sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST") { (data: Data?, response: URLResponse?, error: NSError?) in
+            sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST") { (data: Data?, response: URLResponse?, error: Error?) in
                 
                 if let res = response as? HTTPURLResponse {
                     

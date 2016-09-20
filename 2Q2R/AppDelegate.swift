@@ -35,8 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         NotificationCenter.default.addObserver(self, selector: #selector(self.tokenRefreshHandler(_:)), name: NSNotification.Name.firInstanceIDTokenRefresh, object: nil)
         
         // Prep the U2F database
-        database.execute("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL);")
-        database.execute("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL);")
+        initializeDatabase()
         
         return true
     }

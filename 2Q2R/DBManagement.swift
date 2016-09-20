@@ -9,37 +9,98 @@
 
 import Foundation
 
-let database = SQLiteDB.sharedInstance
+var database: FMDatabase! = nil
+
+func initializeDatabase() {
+    
+    let dbFileURL = try! FileManager.default.url(for: .libraryDirectory, in: .userDomainMask, appropriateFor: nil, create: false).appendingPathComponent("keys.sqlite")
+    
+    guard let db = FMDatabase(path: dbFileURL.path) else {
+        
+        print("Failed to access database file!")
+        return
+        
+    }
+    
+    guard db.open() else {
+        
+        print("Failed to open database!")
+        return
+        
+    }
+    
+    do {
+        
+        try db.executeUpdate("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL)", values: nil)
+        try db.executeUpdate("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL)", values: nil)
+        
+        database = db
+        
+    } catch let error {
+        
+        print("Could not create tables in database, error: \(error)")
+        
+    }
+    
+}
 
 func insertNewKey(_ keyID: String, appID: String, userID: String) {
     
-    database.execute("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(getCurrentDateTime())');")
+    do {
+        
+        try database.executeUpdate("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(getCurrentDateTime())');", values: nil)
+        
+    } catch let error {
+        
+        print(error)
+        
+    }
     
 }
 
 func insertNewServer(_ appID: String, appName: String, baseURL: String) {
     
-    database.execute("INSERT INTO servers VALUES ('\(appID)', '\(appName)', '\(baseURL)');")
+    do {
+        
+        try database.executeUpdate("INSERT INTO servers VALUES ('\(appID)', '\(appName)', '\(baseURL)')", values: nil)
+        
+    } catch let error {
+        
+        print(error)
+        
+    }
     
 }
 
 func userIsAlreadyRegistered(_ userID: String, forServer appID: String) -> Bool {
     
-    let cursor = database.query("SELECT userID, appID FROM keys WHERE userID = '\(userID)' AND appID = '\(appID)';")
-    return cursor.count > 0
+    do {
+        
+        let query = try database.executeQuery("SELECT userID, appID FROM keys WHERE userID = '\(userID)' AND appID = '\(appID)'", values: nil)
+        return query.next()
+        
+    } catch let error {
+        
+        print(error)
+        return false
+        
+    }
     
 }
 
 func getUserID(forKey keyID: String) -> String? {
     
-    let query = database.query("SELECT userID FROM keys WHERE keyID = '\(keyID)';")
-    
-    if query.count == 1 {
+    do {
         
-        return query[0]["userID"] as? String
+        let query = try database.executeQuery("SELECT userID FROM keys WHERE keyID = '\(keyID)'", values: nil)
         
-    } else {
+        guard query.next() else { return nil }
         
+        return query.string(forColumn: "userID")
+        
+    } catch let error {
+        
+        print(error)
         return nil
         
     }
@@ -48,43 +109,119 @@ func getUserID(forKey keyID: String) -> String? {
 
 func getInfo(forServer appID: String) -> (appName: String, baseURL: String)? {
     
-    let info = database.query("SELECT appName, baseURL FROM servers WHERE appID = '\(appID)';")
-    
-    if info.count == 1 {
-        return (info[0]["appName"] as! String, info[0]["baseURL"] as! String)
-    } else {
-        return nil
+    do {
+        
+        let query = try database.executeQuery("SELECT appName, baseURL FROM servers WHERE appID = '\(appID)'", values: nil)
+        
+        if query.next() {
+        
+            return (query.string(forColumn: "appName"), query.string(forColumn: "baseURL"))
+            
+        }
+        
+    } catch let error {
+        
+        print(error)
+        
     }
+    
+    return nil
     
 }
 
 func getRecentKeys() -> [[String:AnyObject]] {
     
-    return database.query("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5;")
+    var result: [[String:AnyObject]] = []
+    
+    do {
+        
+        let query = try database.executeQuery("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5", values: nil)
+        
+        while query.next() {
+            
+            result.append([
+                "userID": query.string(forColumn: "userID") as AnyObject,
+                "appName": query.string(forColumn: "appName") as AnyObject,
+                "baseURL": query.string(forColumn: "baseURL") as AnyObject,
+                "used": query.date(forColumn: "used") as AnyObject,
+                "counter": Int(query.int(forColumn: "counter")) as AnyObject
+            ])
+            
+        }
+        
+    } catch let error {
+        
+        print(error)
+        
+    }
+    
+    return result
     
 }
 
 func getAllKeys() -> [[String:AnyObject]] {
     
-    return database.query("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC;")
+    var result: [[String:AnyObject]] = []
+    
+    do {
+        
+        let query = try database.executeQuery("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC", values: nil)
+        
+        while query.next() {
+            
+            result.append([
+                "userID": query.string(forColumn: "userID") as AnyObject,
+                "appName": query.string(forColumn: "appName") as AnyObject,
+                "baseURL": query.string(forColumn: "baseURL") as AnyObject,
+                "used": query.date(forColumn: "used") as AnyObject,
+                "counter": Int(query.int(forColumn: "counter")) as AnyObject
+                ])
+            
+        }
+        
+    } catch let error {
+        
+        print(error)
+        
+    }
+    
+    return result
     
 }
 
 func getCounter(forKey keyID: String) -> Int? {
     
-    let counter = database.query("SELECT counter FROM keys WHERE keyID = '\(keyID)';")
-    
-    if counter.count == 1 {
-        return counter[0]["counter"] as? Int
-    } else {
-        return nil
+    do {
+        
+        let query = try database.executeQuery("SELECT counter FROM keys WHERE keyID = '\(keyID)'", values: nil)
+        
+        if query.next() {
+            
+            return Int(query.int(forColumn: "counter"))
+            
+        }
+        
+    } catch let error {
+        
+        print(error)
+        
     }
+    
+    return nil
     
 }
 
 func setCounter(forKey keyID: String, to counter: Int) {
     
-    database.execute("UPDATE keys SET counter = '\(counter)', used = '\(getCurrentDateTime())' WHERE keyID = '\(keyID)';")
+    do {
+        
+        try database.executeUpdate("UPDATE keys SET counter = '\(counter)', used = '\(getCurrentDateTime())' WHERE keyID = '\(keyID)'", values: nil)
+        
+    } catch let error {
+        
+        print(error)
+        
+    }
     
 }
 
