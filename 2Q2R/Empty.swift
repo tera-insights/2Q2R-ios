@@ -11,9 +11,9 @@ import UIKit
 
 class EmptyViewController: UIViewController {
     
-    @IBAction func onRegisterAction(sender: AnyObject) {
+    @IBAction func onRegisterAction(_ sender: AnyObject) {
         
-        let view = self.storyboard?.instantiateViewControllerWithIdentifier("scan")
+        let view = self.storyboard?.instantiateViewController(withIdentifier: "scan")
         navigationController?.pushViewController(view!, animated: true)
         
     }

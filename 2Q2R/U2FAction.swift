@@ -11,38 +11,38 @@ import Firebase
 
 enum SecError {
     
-    case RegistrationSuccess, AuthenticationSuccess, UserAuthNotSet, UserAuthFailed, UserAuthCanceled, InternetError, UnknownKey, UnknownServer, ServerError, DeviceAlreadyRegistered, RegistrationDeclined, AuthenticationDeclined, AuthenticationTimeout, Unspecified /* Should not ever appear in final application, because error handling will eventually cover every scenario. */
+    case registrationSuccess, authenticationSuccess, userAuthNotSet, userAuthFailed, userAuthCanceled, internetError, unknownKey, unknownServer, serverError, deviceAlreadyRegistered, registrationDeclined, authenticationDeclined, authenticationTimeout, unspecified /* Should not ever appear in final application, because error handling will eventually cover every scenario. */
     
     func description() -> String {
         
         switch self {
-            case .RegistrationSuccess:
+            case .registrationSuccess:
                 return "Registration successful!"
-            case .AuthenticationSuccess:
+            case .authenticationSuccess:
                 return "Authentication successful!"
-            case .UserAuthNotSet:
+            case .userAuthNotSet:
                 return "You must have a password set on your device to generate and use 2Q2R keys. TouchID is even better."
-            case .UserAuthFailed:
+            case .userAuthFailed:
                 return "You failed to verify yourself. Please scan the QR and try again."
-            case .UserAuthCanceled:
+            case .userAuthCanceled:
                 return "You declined the operation."
-            case .InternetError:
+            case .internetError:
                 return "Could not reach the server. Please check your internet connection and try again."
-            case .UnknownKey:
+            case .unknownKey:
                 return "Sorry, could not find key information to authenticate. You may have deleted it."
-            case .UnknownServer:
+            case .unknownServer:
                 return "You are not registered with this server. You may have deleted all your keys for this server on this device, causing it to be forgotten."
-            case .ServerError:
+            case .serverError:
                 return "The server sent badly formatter information. Please contact an admin."
-            case .DeviceAlreadyRegistered:
+            case .deviceAlreadyRegistered:
                 return "This device is already registered to your account."
-            case .RegistrationDeclined:
+            case .registrationDeclined:
                 return "Registration declined."
-            case .AuthenticationDeclined:
+            case .authenticationDeclined:
                 return "Authentication declined."
-            case .AuthenticationTimeout:
+            case .authenticationTimeout:
                 return "The authentication request timed out. Please re-login in your browser and try again."
-            case .Unspecified:
+            case .unspecified:
                 return "Sorry, an unspecified error has occurred."
         }
         
@@ -56,7 +56,7 @@ protocol U2FAction {
     
 }
 
-func process2Q2RRequest(req: String) -> U2FAction? {
+func process2Q2RRequest(_ req: String) -> U2FAction? {
     
     print(req)
     
@@ -64,15 +64,15 @@ func process2Q2RRequest(req: String) -> U2FAction? {
         return nil
     }
     
-    let qrArgs = req.componentsSeparatedByString(" ")
+    let qrArgs = req.components(separatedBy: " ")
     
     switch qrArgs[0] {
     case "R":
         if qrArgs.count != 4 {
             print("Incorrect number of arguments.")
             break
-        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length != 32 {
-            print("Challenge of incorrect length: \(decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length) bytes.")
+        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).count != 32 {
+            print("Challenge of incorrect length: \(decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).count) bytes.")
             break
         } else if qrArgs[2] =~ "[a-zA-Z0-9:/.]+" {
             return U2FActionRegister(challenge: qrArgs[1], infoURL: qrArgs[2], userID: qrArgs[3])
@@ -80,9 +80,9 @@ func process2Q2RRequest(req: String) -> U2FAction? {
     case "A":
         if qrArgs.count != 5 {
             break
-        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).length != 32 {
+        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[1]).count != 32 {
             break
-        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[2]).length != 32 {
+        } else if decodeFromWebsafeBase64ToBase64Data(qrArgs[2]).count != 32 {
             break
         } else if let counterInt = Int(qrArgs[4]) {
             return U2FActionAuthenticate(appID: qrArgs[1], challenge: qrArgs[2], keyID: qrArgs[3], counter: counterInt)
@@ -96,15 +96,15 @@ func process2Q2RRequest(req: String) -> U2FAction? {
 
 class U2FActionRegister: U2FAction {
     
-    private static let keyHandleLength: UInt8 = 16
+    fileprivate static let keyHandleLength: UInt8 = 16
     
-    private let challenge: String
-    private let infoURL: String
-    private let userID: String
+    fileprivate let challenge: String
+    fileprivate let infoURL: String
+    fileprivate let userID: String
     
-    private var appName: String! = "Uknown Server"
-    private var appID: String!
-    private var baseURL: String!
+    fileprivate var appName: String! = "Uknown Server"
+    fileprivate var appID: String!
+    fileprivate var baseURL: String!
     
     init(challenge: String, infoURL: String, userID: String) {
         
@@ -116,7 +116,7 @@ class U2FActionRegister: U2FAction {
     
     func execute() {
         
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) {
+        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.high).async {
             
             self.fetchServerInfo()
             
@@ -124,15 +124,15 @@ class U2FActionRegister: U2FAction {
         
     }
     
-    private func fetchServerInfo() {
+    fileprivate func fetchServerInfo() {
         
-        sendJSONToURL(infoURL, json: nil, method: "GET") { (data: NSData?, response: NSURLResponse?, error: NSError?) in
+        sendJSONToURL(infoURL, json: nil, method: "GET") { (data: Data?, response: URLResponse?, error: NSError?) in
             
             do {
                 
                 if let res = data {
                     
-                    let json = try NSJSONSerialization.JSONObjectWithData(res, options: NSJSONReadingOptions()) as! [String:AnyObject]
+                    let json = try JSONSerialization.jsonObject(with: res, options: JSONSerialization.ReadingOptions()) as! [String:AnyObject]
                     
                     self.appName = json["appName"] as! String
                     self.appID = json["appID"] as! String
@@ -140,12 +140,12 @@ class U2FActionRegister: U2FAction {
                     
                     if userIsAlreadyRegistered(self.userID, forServer: self.appID) {
                         
-                        displayError(.DeviceAlreadyRegistered, withTitle: self.appName)
+                        displayError(.deviceAlreadyRegistered, withTitle: self.appName)
                         return
                         
                     } else {
                     
-                        confirmResponseFromBackgroundThread(.Register, challenge: self.challenge, appName: self.appName, userID: self.userID) { (approved) in
+                        confirmResponseFromBackgroundThread(.register, challenge: self.challenge, appName: self.appName, userID: self.userID) { (approved) in
                             
                             if approved {
                                 
@@ -159,13 +159,13 @@ class U2FActionRegister: U2FAction {
                     
                 } else {
                     
-                    displayError(.InternetError, withTitle: "Connection Error")
+                    displayError(.internetError, withTitle: "Connection Error")
                     
                 }
                 
             } catch {
             
-                displayError(.ServerError, withTitle: "Bad Info")
+                displayError(.serverError, withTitle: "Bad Info")
             
             }
             
@@ -173,22 +173,22 @@ class U2FActionRegister: U2FAction {
         
     }
     
-    private func genKeyPair() -> (privateAlias: String, pubKey: NSData)? {
+    fileprivate func genKeyPair() -> (privateAlias: String, pubKey: Data)? {
         
         // Generate a keyhandle, which will be returned as an alias for the private key
         let numBytes = Int(U2FActionRegister.keyHandleLength)
-        var randomBytes = [UInt8](count: numBytes, repeatedValue: 0)
+        var randomBytes = [UInt8](repeating: 0, count: numBytes)
         SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
-        let data = NSData(bytes: &randomBytes, length: numBytes)
-        var alias = data.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+        let data = Data(bytes: UnsafePointer<UInt8>(&randomBytes), count: numBytes)
+        var alias = data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
         alias.makeWebsafe()
         
-        let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .TouchIDCurrentSet, nil)!
+        let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .touchIDCurrentSet, nil)!
         
         // Key pair parameters
         var keyParams: [String:AnyObject] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-            kSecAttrKeySizeInBits as String: 256
+            kSecAttrKeySizeInBits as String: 256 as AnyObject
         ]
         
         // Private key parameters
@@ -207,11 +207,11 @@ class U2FActionRegister: U2FAction {
         ]
         
         var pubKeyRef, privKeyRef: SecKey?
-        var err = SecKeyGeneratePair(keyParams, &pubKeyRef, &privKeyRef)
+        var err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
         
-        guard let _ = pubKeyRef where err == errSecSuccess else {
+        guard let _ = pubKeyRef , err == errSecSuccess else {
             
-            displayError(err == errSecAuthFailed ? .UserAuthNotSet : .Unspecified, withTitle: "Key Generation Failed")
+            displayError(err == errSecAuthFailed ? .userAuthNotSet : .unspecified, withTitle: "Key Generation Failed")
             return nil
             
         }
@@ -227,20 +227,20 @@ class U2FActionRegister: U2FAction {
         var pubKeyOpt: AnyObject?
         err = SecItemCopyMatching(query, &pubKeyOpt)
         
-        if let pubKey = pubKeyOpt as? NSData where err == errSecSuccess {
+        if let pubKey = pubKeyOpt as? Data , err == errSecSuccess {
             
             return (alias, pubKey)
             
         } else {
             
-            displayError(.Unspecified, withTitle: "Failed to Export Public Key")
+            displayError(.unspecified, withTitle: "Failed to Export Public Key")
             return nil
             
         }
         
     }
     
-    private func generateX509(forPublicKey pubKey: NSData) -> NSData {
+    fileprivate func generateX509(forPublicKey pubKey: Data) -> Data {
         
         let certificate = NSMutableData()
         
@@ -248,15 +248,15 @@ class U2FActionRegister: U2FAction {
         
         let certEnd: [UInt8] = [0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x03, 0x03, 0x00, 0x30, 0x00]
         
-        certificate.appendBytes(certBeginning, length: certBeginning.count)
-        certificate.appendData(pubKey)
-        certificate.appendBytes(certEnd, length: certEnd.count)
+        certificate.append(certBeginning, length: certBeginning.count)
+        certificate.append(pubKey)
+        certificate.append(certEnd, length: certEnd.count)
         
-        return certificate
+        return certificate as Data
         
     }
     
-    private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData? {
+    fileprivate func sign(bytes data: Data, usingKeyWithAlias alias: String) -> Data? {
         
         let query = [
             kSecClass as String: kSecClassKey,
@@ -264,20 +264,20 @@ class U2FActionRegister: U2FAction {
             kSecAttrApplicationTag as String: alias,
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
             kSecReturnRef as String: true
-        ]
+        ] as [String : Any]
         
         var privateKey: AnyObject?
-        var error = SecItemCopyMatching(query, &privateKey)
+        var error = SecItemCopyMatching(query as CFDictionary, &privateKey)
         
         guard error == errSecSuccess else {
             
             if error == errSecItemNotFound {
                 
-                displayError(.Unspecified, withTitle: "Private Key Not Found")
+                displayError(.unspecified, withTitle: "Private Key Not Found")
                 
             } else {
                 
-                displayError(error == errSecUserCanceled ? .UserAuthCanceled : .UserAuthFailed, withTitle: "Private Key Access Denied")
+                displayError(error == errSecUserCanceled ? .userAuthCanceled : .userAuthFailed, withTitle: "Private Key Access Denied")
                 
             }
             
@@ -286,12 +286,12 @@ class U2FActionRegister: U2FAction {
         }
         
         let hashedData = NSMutableData(length: Int(CC_SHA256_DIGEST_LENGTH))!
-        CC_SHA256(data.bytes, CC_LONG(data.length), UnsafeMutablePointer(hashedData.mutableBytes))
+        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer(hashedData.mutableBytes))
         
         var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
         let signedHash = NSMutableData(length: signedHashLength)!
         
-        error = SecKeyRawSign(privateKey as! SecKeyRef, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
+        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -299,22 +299,22 @@ class U2FActionRegister: U2FAction {
             
             switch error {
             case errSecAuthFailed:
-                displayError(.UserAuthFailed, withTitle: "Could not Sign Registration Response")
+                displayError(.userAuthFailed, withTitle: "Could not Sign Registration Response")
             case errSecUserCanceled:
-                displayError(.UserAuthCanceled, withTitle: self.appName)
+                displayError(.userAuthCanceled, withTitle: self.appName)
             default:
-                displayError(.Unspecified, withTitle: "Could not Sign Registration Response")
+                displayError(.unspecified, withTitle: "Could not Sign Registration Response")
             }
             
             return nil
             
         }
         
-        return signedHash.subdataWithRange(NSMakeRange(0, signedHashLength))
+        return signedHash.subdata(with: NSMakeRange(0, signedHashLength))
         
     }
     
-    private func sendRegistrationResponse() {
+    fileprivate func sendRegistrationResponse() {
         
         if let keyRefs = genKeyPair() {
         
@@ -326,41 +326,41 @@ class U2FActionRegister: U2FAction {
             var futureUse: UInt8 = 0x00
             var reserved: UInt8 = 0x05
             let keyHandle = decodeFromWebsafeBase64ToBase64Data(keyRefs.privateAlias)
-            var keyHandleLength = UInt8(keyHandle.length)
+            var keyHandleLength = UInt8(keyHandle.count)
             
-            bytesToSign.appendBytes(&futureUse, length: 1)
-            bytesToSign.appendData(self.appID.sha256())
-            bytesToSign.appendData(clientData.sha256())
-            bytesToSign.appendData(keyHandle)
-            bytesToSign.appendData(keyRefs.pubKey)
+            bytesToSign.append(&futureUse, length: 1)
+            bytesToSign.append(self.appID.sha256() as Data)
+            bytesToSign.append(clientData.sha256() as Data)
+            bytesToSign.append(keyHandle)
+            bytesToSign.append(keyRefs.pubKey)
             
-            if let signature = sign(bytes: bytesToSign, usingKeyWithAlias: keyRefs.privateAlias) {
+            if let signature = sign(bytes: bytesToSign as Data, usingKeyWithAlias: keyRefs.privateAlias) {
                 
-                registrationData.appendBytes(&reserved, length: sizeofValue(reserved))
-                registrationData.appendData(keyRefs.pubKey)
-                registrationData.appendBytes(&keyHandleLength, length: 1)
-                registrationData.appendData(keyHandle)
-                registrationData.appendData(generateX509(forPublicKey: keyRefs.pubKey))
-                registrationData.appendData(signature)
+                registrationData.append(&reserved, length: MemoryLayout.size(ofValue: reserved))
+                registrationData.append(keyRefs.pubKey)
+                registrationData.append(&keyHandleLength, length: 1)
+                registrationData.append(keyHandle)
+                registrationData.append(generateX509(forPublicKey: keyRefs.pubKey))
+                registrationData.append(signature)
                 
                 let registration: [String:AnyObject] = [
-                    "successful": true,
+                    "successful": true as AnyObject,
                     "data": [
                         "type": "2q2r",
-                        "deviceName": UIDevice.currentDevice().name,
+                        "deviceName": UIDevice.current.name,
                         "fcmToken": FIRInstanceID.instanceID().token()!,
                         "clientData": clientData.asBase64(websafe: false),
-                        "registrationData": registrationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+                        "registrationData": registrationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
                     ]
                 ]
                 
                 print("FCM Token: \"\(FIRInstanceID.instanceID().token()!)\"")
                 
-                let regURL = self.baseURL + (self.baseURL.substringFromIndex(self.baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
+                let regURL = self.baseURL + (self.baseURL.substring(from: self.baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
                 
-                sendJSONToURL(regURL, json: registration, method: "POST") { (data: NSData?, response: NSURLResponse?, error: NSError?) in
+                sendJSONToURL(regURL, json: registration, method: "POST") { (data: Data?, response: URLResponse?, error: NSError?) in
                     
-                    let status = (response as! NSHTTPURLResponse).statusCode
+                    let status = (response as! HTTPURLResponse).statusCode
                     
                     if status == 200 {
                         
@@ -375,11 +375,11 @@ class U2FActionRegister: U2FAction {
                         recentKeys = getRecentKeys()
                         allKeys = getAllKeys()
                         
-                        displayError(.RegistrationSuccess, withTitle: self.appName)
+                        displayError(.registrationSuccess, withTitle: self.appName)
                         
                     } else {
                         
-                        displayError(.RegistrationDeclined, withTitle: self.appName)
+                        displayError(.registrationDeclined, withTitle: self.appName)
                         
                     }
                     
@@ -395,13 +395,13 @@ class U2FActionRegister: U2FAction {
 
 class U2FActionAuthenticate: U2FAction {
     
-    private let appID: String
-    private let challenge: String
-    private let keyID: String
-    private let counter: Int
+    fileprivate let appID: String
+    fileprivate let challenge: String
+    fileprivate let keyID: String
+    fileprivate let counter: Int
     
-    private var appName: String!
-    private var baseURL: String!
+    fileprivate var appName: String!
+    fileprivate var baseURL: String!
     
     init(appID: String, challenge: String, keyID: String, counter: Int) {
         
@@ -416,7 +416,7 @@ class U2FActionAuthenticate: U2FAction {
     
     func execute() {
         
-        dispatch_async(dispatch_get_main_queue()) {
+        DispatchQueue.main.async {
             
             if let serverInfo = getInfo(forServer: self.appID) {
                 
@@ -425,7 +425,7 @@ class U2FActionAuthenticate: U2FAction {
                 
                 if let userID = getUserID(forKey: self.keyID) {
                     
-                    confirmResponseFromBackgroundThread(.Authenticate, challenge: self.challenge, appName: self.appName, userID: userID) { (approved) in
+                    confirmResponseFromBackgroundThread(.authenticate, challenge: self.challenge, appName: self.appName, userID: userID) { (approved) in
                         
                         if approved {
                             
@@ -439,7 +439,7 @@ class U2FActionAuthenticate: U2FAction {
                 
             } else {
                 
-                displayError(.UnknownServer, withTitle: "Server Information Not Found")
+                displayError(.unknownServer, withTitle: "Server Information Not Found")
                 
             }
             
@@ -447,7 +447,7 @@ class U2FActionAuthenticate: U2FAction {
         
     }
     
-    private func sign(bytes data: NSData, usingKeyWithAlias alias: String) -> NSData? {
+    fileprivate func sign(bytes data: Data, usingKeyWithAlias alias: String) -> Data? {
         
         let query = [
             kSecClass as String: kSecClassKey,
@@ -455,20 +455,20 @@ class U2FActionAuthenticate: U2FAction {
             kSecAttrApplicationTag as String: alias,
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
             kSecReturnRef as String: true
-        ]
+        ] as [String : Any]
         
         var privateKey: AnyObject?
-        var error = SecItemCopyMatching(query, &privateKey)
+        var error = SecItemCopyMatching(query as CFDictionary, &privateKey)
         
         guard error == errSecSuccess else {
             
             if error == errSecItemNotFound {
                 
-                displayError(.Unspecified, withTitle: "Private Key Not Found")
+                displayError(.unspecified, withTitle: "Private Key Not Found")
                 
             } else {
                 
-                displayError(error == errSecUserCanceled ? .UserAuthCanceled : .UserAuthFailed, withTitle: "Private Key Access Denied")
+                displayError(error == errSecUserCanceled ? .userAuthCanceled : .userAuthFailed, withTitle: "Private Key Access Denied")
                 
             }
             
@@ -477,12 +477,12 @@ class U2FActionAuthenticate: U2FAction {
         }
         
         let hashedData = NSMutableData(length: Int(CC_SHA256_DIGEST_LENGTH))!
-        CC_SHA256(data.bytes, CC_LONG(data.length), UnsafeMutablePointer(hashedData.mutableBytes))
+        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer(hashedData.mutableBytes))
         
         var signedHashLength = 256 // Allocate way more bytes than needed! After SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
         let signedHash = NSMutableData(length: signedHashLength)!
         
-        error = SecKeyRawSign(privateKey as! SecKeyRef, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
+        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, UnsafePointer<UInt8>(hashedData.mutableBytes), hashedData.length, UnsafeMutablePointer<UInt8>(signedHash.mutableBytes), &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -490,78 +490,78 @@ class U2FActionAuthenticate: U2FAction {
             
             switch error {
             case errSecAuthFailed:
-                displayError(.UserAuthFailed, withTitle: "Could not Sign Registration Response")
+                displayError(.userAuthFailed, withTitle: "Could not Sign Registration Response")
             case errSecUserCanceled:
-                displayError(.UserAuthCanceled, withTitle: self.appName)
+                displayError(.userAuthCanceled, withTitle: self.appName)
             default:
-                displayError(.Unspecified, withTitle: "Could not Sign Registration Response")
+                displayError(.unspecified, withTitle: "Could not Sign Registration Response")
             }
             
             return nil
             
         }
         
-        return signedHash.subdataWithRange(NSMakeRange(0, signedHashLength))
+        return signedHash.subdata(with: NSMakeRange(0, signedHashLength))
         
     }
     
-    private func sendAuthenticationResponse() {
+    fileprivate func sendAuthenticationResponse() {
         
         let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL)\"}"
         
         let dataToBeSigned = NSMutableData()
         
-        let applicationParameter: NSData = self.appID.sha256()
+        let applicationParameter: Data = self.appID.sha256() as Data
         var userPresence: UInt8 = 0x1
         var counterBytes: UInt32 = UInt32(self.counter)
         print("Counter bytes: \(counterBytes)")
-        let challengeParameter: NSData = clientData.sha256()
+        let challengeParameter: Data = clientData.sha256() as Data
         
-        dataToBeSigned.appendData(applicationParameter)
-        dataToBeSigned.appendBytes(&userPresence, length: sizeof(UInt8))
-        dataToBeSigned.appendBytes(&counterBytes, length: sizeof(UInt32))
-        dataToBeSigned.appendData(challengeParameter)
+        dataToBeSigned.append(applicationParameter)
+        dataToBeSigned.append(&userPresence, length: MemoryLayout<UInt8>.size)
+        dataToBeSigned.append(&counterBytes, length: MemoryLayout<UInt32>.size)
+        dataToBeSigned.append(challengeParameter)
         
-        if let signedData = sign(bytes: dataToBeSigned, usingKeyWithAlias: self.keyID) {
+        if let signedData = sign(bytes: dataToBeSigned as Data, usingKeyWithAlias: self.keyID) {
             
             let authenticationData = NSMutableData()
             
-            authenticationData.appendBytes(&userPresence, length: sizeof(UInt8))
-            authenticationData.appendBytes(&counterBytes, length: sizeof(UInt32))
-            authenticationData.appendData(signedData)
+            authenticationData.append(&userPresence, length: MemoryLayout<UInt8>.size)
+            authenticationData.append(&counterBytes, length: MemoryLayout<UInt32>.size)
+            authenticationData.append(signedData)
             
             let authenticationResponse: [String:AnyObject] = [
-                "successful": true,
+                "successful": true as AnyObject,
                 "data": [
                     "clientData": clientData.asBase64(websafe: false),
-                    "signatureData": authenticationData.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+                    "signatureData": authenticationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
                 ]
             ]
             
-            let authenticationURL = baseURL + (baseURL.substringFromIndex(baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
+            let authenticationURL = baseURL + (baseURL.substring(from: baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
             
-            sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST") { (data: NSData?, response: NSURLResponse?, error: NSError?) in
+            sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST") { (data: Data?, response: URLResponse?, error: NSError?) in
                 
-                if let res = response as? NSHTTPURLResponse {
+                if let res = response as? HTTPURLResponse {
                     
                     let status = res.statusCode
                     
                     switch status {
                         case 200:
                             setCounter(forKey: self.keyID, to: self.counter)
-                            displayError(.AuthenticationSuccess, withTitle: self.appName)
+                            displayError(.authenticationSuccess, withTitle: self.appName)
                             recentKeys = getRecentKeys()
                             allKeys = getAllKeys()
                         case 401:
-                            displayError(.AuthenticationDeclined, withTitle: self.appName)
+                            displayError(.authenticationDeclined, withTitle: self.appName)
                         case 408:
-                            displayError(.AuthenticationTimeout, withTitle: self.appName)
+                            displayError(.authenticationTimeout, withTitle: self.appName)
                         default: break
                     }
                     
                 } else {
                     
-                    displayError(.InternetError, withTitle: "Server Did Not Respond")
+                    displayError(.internetError, withTitle: "Server Did Not Respond")
                     
                 }
                 

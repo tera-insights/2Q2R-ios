@@ -14,7 +14,7 @@ var allKeys: [[String:AnyObject]] = getAllKeys() {
     
     didSet {
         
-        dispatch_async(dispatch_get_main_queue()) {
+        DispatchQueue.main.async {
         
             keyTable?.reloadData()
             keyTable?.setNeedsDisplay()
@@ -29,17 +29,20 @@ var allKeys: [[String:AnyObject]] = getAllKeys() {
 
 class Main: UITableViewController {
     
-    @IBAction func onAboutAction(sender: AnyObject) {
+    @IBAction func onAboutAction(_ sender: AnyObject) {
         
-        let alert = UIAlertController(title: "2Q2R Version 1.0", message: "©2016 Tera Insights, LLC.\nLicensed under Apache 2.0.", preferredStyle: .Alert)
-        alert.addAction(UIAlertAction(title: "Okay", style: .Cancel, handler: nil))
-        presentViewController(alert, animated: true, completion: nil)
+        let infoDialog = storyboard?.instantiateViewController(withIdentifier: "about")
+        
+        infoDialog?.modalPresentationStyle = .formSheet
+        infoDialog?.modalTransitionStyle = .crossDissolve
+        
+        present(infoDialog!, animated: true, completion: nil)
         
     }
     
-    @IBAction func onScanAction(sender: AnyObject) {
+    @IBAction func onScanAction(_ sender: AnyObject) {
         
-        let view = self.storyboard?.instantiateViewControllerWithIdentifier("scan")
+        let view = self.storyboard?.instantiateViewController(withIdentifier: "scan")
         navigationController?.pushViewController(view!, animated: true)
         
     }
@@ -57,10 +60,10 @@ class Main: UITableViewController {
         // Dispose of any resources that can be recreated.
     }
     
-    override func numberOfSectionsInTableView(tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         
         if allKeys.count == 0 {
-            tableView.backgroundView = self.storyboard?.instantiateViewControllerWithIdentifier("emptyKeyView").view
+            tableView.backgroundView = self.storyboard?.instantiateViewController(withIdentifier: "emptyKeyView").view
             return 0
         } else {
             tableView.backgroundView = nil
@@ -70,24 +73,24 @@ class Main: UITableViewController {
         
     }
     
-    override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         return section == 0 ? min(5, recentKeys.count) : allKeys.count
         
     }
     
-    override func tableView(tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         
         return section == 0 ? (allKeys.count > 5 ? "Recent" : "Keys") : "All"
         
     }
     
-    override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
+    override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCellWithIdentifier("KeyCell") as! KeyCell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "KeyCell") as! KeyCell
         
-        let userID = indexPath.section == 0 ? recentKeys[indexPath.row]["userID"] : allKeys[indexPath.row]["userID"]
-        let appName = indexPath.section == 0 ? recentKeys[indexPath.row]["appName"] : allKeys[indexPath.row]["appName"]
+        let userID = (indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row]["userID"] : allKeys[(indexPath as NSIndexPath).row]["userID"]
+        let appName = (indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row]["appName"] : allKeys[(indexPath as NSIndexPath).row]["appName"]
         
         cell.userID.text = userID as? String
         cell.appName.text = appName as? String
@@ -96,22 +99,22 @@ class Main: UITableViewController {
         
     }
     
-    override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let keyDesc = (indexPath.section == 0 ? recentKeys[indexPath.row] : allKeys[indexPath.row])
-        let keyDetailsView = storyboard?.instantiateViewControllerWithIdentifier("keyDetails") as! KeyDetails
+        let keyDesc = ((indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row] : allKeys[(indexPath as NSIndexPath).row])
+        let keyDetailsView = storyboard?.instantiateViewController(withIdentifier: "keyDetails") as! KeyDetails
         
-        let dateTimeUsed = keyDesc["used"] as! NSDate
+        let dateTimeUsed = keyDesc["used"] as! Date
         
-        let formatter = NSDateFormatter()
+        let formatter = DateFormatter()
         
-        formatter.dateStyle = .LongStyle
-        formatter.timeStyle = .NoStyle
-        let dateUsed = formatter.stringFromDate(dateTimeUsed)
+        formatter.dateStyle = .long
+        formatter.timeStyle = .none
+        let dateUsed = formatter.string(from: dateTimeUsed)
         
-        formatter.dateStyle = .NoStyle
-        formatter.timeStyle = .ShortStyle
-        let timeUsed = formatter.stringFromDate(dateTimeUsed)
+        formatter.dateStyle = .none
+        formatter.timeStyle = .short
+        let timeUsed = formatter.string(from: dateTimeUsed)
         
         keyDetailsView.appName = keyDesc["appName"] as! String
         keyDetailsView.baseURL = keyDesc["baseURL"] as! String
@@ -122,7 +125,7 @@ class Main: UITableViewController {
         
         navigationController?.pushViewController(keyDetailsView, animated: true)
         
-        tableView.deselectRowAtIndexPath(indexPath, animated: true)
+        tableView.deselectRow(at: indexPath, animated: true)
         
     }
 

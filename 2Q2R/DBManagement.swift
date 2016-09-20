@@ -11,19 +11,19 @@ import Foundation
 
 let database = SQLiteDB.sharedInstance
 
-func insertNewKey(keyID: String, appID: String, userID: String) {
+func insertNewKey(_ keyID: String, appID: String, userID: String) {
     
     database.execute("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(getCurrentDateTime())');")
     
 }
 
-func insertNewServer(appID: String, appName: String, baseURL: String) {
+func insertNewServer(_ appID: String, appName: String, baseURL: String) {
     
     database.execute("INSERT INTO servers VALUES ('\(appID)', '\(appName)', '\(baseURL)');")
     
 }
 
-func userIsAlreadyRegistered(userID: String, forServer appID: String) -> Bool {
+func userIsAlreadyRegistered(_ userID: String, forServer appID: String) -> Bool {
     
     let cursor = database.query("SELECT userID, appID FROM keys WHERE userID = '\(userID)' AND appID = '\(appID)';")
     return cursor.count > 0

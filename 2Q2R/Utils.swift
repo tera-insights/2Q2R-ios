@@ -10,19 +10,19 @@ import Foundation
 import UIKit
 
 enum Type {
-    case AUTH, REG, INVALID
+    case auth, reg, invalid
 }
 
 extension String {
     
-    func asBase64(websafe websafe: Bool) -> String {
+    func asBase64(websafe: Bool) -> String {
         
-        let data = self.dataUsingEncoding(NSUTF8StringEncoding)
-        let encodedString = data!.base64EncodedStringWithOptions(NSDataBase64EncodingOptions(rawValue: 0))
+        let data = self.data(using: String.Encoding.utf8)
+        let encodedString = data!.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
         
         if websafe {
             
-            return encodedString.stringByReplacingOccurrencesOfString("+", withString: "-").stringByReplacingOccurrencesOfString("/", withString: "_").stringByReplacingOccurrencesOfString("=", withString: "")
+            return encodedString.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
             
         } else {
             
@@ -34,49 +34,49 @@ extension String {
     
     mutating func makeWebsafe() {
         
-        self = self.stringByReplacingOccurrencesOfString("+", withString: "-").stringByReplacingOccurrencesOfString("/", withString: "_").stringByReplacingOccurrencesOfString("=", withString: "")
+        self = self.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         
     }
     
-    func sha256() -> NSData {
+    func sha256() -> Data {
         
-        let data = self.dataUsingEncoding(NSUTF8StringEncoding)!
-        var hash = [UInt8](count: Int(CC_SHA256_DIGEST_LENGTH), repeatedValue: 0)
+        let data = self.data(using: String.Encoding.utf8)!
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
         
-        CC_SHA256(data.bytes, CC_LONG(data.length), &hash)
+        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), &hash)
         
-        return NSData(bytes: hash, length: Int(CC_SHA256_DIGEST_LENGTH))
+        return Data(bytes: UnsafePointer<UInt8>(hash), count: Int(CC_SHA256_DIGEST_LENGTH))
         
     }
     
 }
 
-func decodeFromWebsafeBase64ToBase64Data(websafeString: String) -> NSData {
+func decodeFromWebsafeBase64ToBase64Data(_ websafeString: String) -> Data {
     
-    var base64String = websafeString.stringByReplacingOccurrencesOfString("-", withString: "+").stringByReplacingOccurrencesOfString("_", withString: "/")
+    var base64String = websafeString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
     
     switch base64String.characters.count % 3 {
         case 1:
-            base64String.appendContentsOf("==")
+            base64String.append("==")
         case 2:
-            base64String.appendContentsOf("=")
+            base64String.append("=")
         default:
             break
     }
     
-    return NSData(base64EncodedString: base64String, options: NSDataBase64DecodingOptions(rawValue: 0))!
+    return Data(base64Encoded: base64String, options: NSData.Base64DecodingOptions(rawValue: 0))!
     
 }
 
-func decodeFromWebsafeBase64ToBase64String(websafeString: String) -> String {
+func decodeFromWebsafeBase64ToBase64String(_ websafeString: String) -> String {
     
-    var base64String = websafeString.stringByReplacingOccurrencesOfString("-", withString: "+").stringByReplacingOccurrencesOfString("_", withString: "/")
+    var base64String = websafeString.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
     
     switch base64String.characters.count % 3 {
     case 1:
-        base64String.appendContentsOf("==")
+        base64String.append("==")
     case 2:
-        base64String.appendContentsOf("=")
+        base64String.append("=")
     default:
         break
     }
@@ -85,28 +85,28 @@ func decodeFromWebsafeBase64ToBase64String(websafeString: String) -> String {
     
 }
 
-infix operator =~ {}
+infix operator =~
 func =~ (input: String, pattern: String) -> Bool {
-    return input.rangeOfString(pattern, options: .RegularExpressionSearch) != nil
+    return input.range(of: pattern, options: .regularExpression) != nil
 }
 
-func sendJSONToURL(urlString: String, json: [String:AnyObject]?, method: String, responseHandler: (NSData?, NSURLResponse?, NSError?) -> Void) {
+func sendJSONToURL(_ urlString: String, json: [String:AnyObject]?, method: String, responseHandler: (Data?, URLResponse?, NSError?) -> Void) {
     
     do {
         
-        if let url = NSURL(string: urlString) {
+        if let url = URL(string: urlString) {
             
-            let req = NSMutableURLRequest(URL: url)
-            req.HTTPMethod = method
+            let req = NSMutableURLRequest(url: url)
+            req.httpMethod = method
             
             if method == "POST" && json != nil {
                 
                 req.setValue("application/json; charset=utf-8", forHTTPHeaderField: "Content-Type")
-                req.HTTPBody = try NSJSONSerialization.dataWithJSONObject(json!, options: NSJSONWritingOptions(rawValue: 0))
+                req.httpBody = try JSONSerialization.data(withJSONObject: json!, options: JSONSerialization.WritingOptions(rawValue: 0))
                 
             }
             
-            let registrationTask = NSURLSession.sharedSession().dataTaskWithRequest(req, completionHandler: responseHandler)
+            let registrationTask = URLSession.shared.dataTask(with: req, completionHandler: responseHandler)
             registrationTask.resume()
             
         } else {
@@ -123,54 +123,54 @@ func sendJSONToURL(urlString: String, json: [String:AnyObject]?, method: String,
     
 }
 
-func getCurrentDateTime() -> NSDate {
+func getCurrentDateTime() -> Date {
     
-    let now = NSDate()
-    let components = NSDateComponents()
-    let calendar = NSCalendar.currentCalendar()
+    let now = Date()
+    var components = DateComponents()
+    let calendar = Calendar.current
     
-    components.day = calendar.component(.Day, fromDate: now)
-    components.month = calendar.component(.Month, fromDate: now)
-    components.year = calendar.component(.Year, fromDate: now)
-    components.hour = calendar.component(.Hour, fromDate: now)
-    components.minute = calendar.component(.Minute, fromDate: now)
+    components.day = (calendar as NSCalendar).component(.day, from: now)
+    components.month = (calendar as NSCalendar).component(.month, from: now)
+    components.year = (calendar as NSCalendar).component(.year, from: now)
+    components.hour = (calendar as NSCalendar).component(.hour, from: now)
+    components.minute = (calendar as NSCalendar).component(.minute, from: now)
     
-    return calendar.dateFromComponents(components)!
+    return calendar.date(from: components)!
     
 }
 
-func displayError(error: SecError, withTitle title: String) {
+func displayError(_ error: SecError, withTitle title: String) {
     
-    dispatch_async(dispatch_get_main_queue()) {
+    DispatchQueue.main.async {
         
-        let alert = UIAlertController(title: title, message: error.description(), preferredStyle: .Alert)
+        let alert = UIAlertController(title: title, message: error.description(), preferredStyle: .alert)
         
-        let okayAction = UIAlertAction(title: "Okay", style: .Cancel, handler: nil)
+        let okayAction = UIAlertAction(title: "Okay", style: .cancel, handler: nil)
         alert.addAction(okayAction)
         
-        UIApplication.sharedApplication().windows[0].rootViewController?.presentViewController(alert, animated: true, completion: nil)
+        UIApplication.shared.windows[0].rootViewController?.present(alert, animated: true, completion: nil)
         
         
     }
     
 }
 
-func confirmResponseFromBackgroundThread(type: ReqType, challenge: String, appName: String, userID: String, onResult: (approved: Bool) -> Void) {
+func confirmResponseFromBackgroundThread(_ type: ReqType, challenge: String, appName: String, userID: String, onResult: @escaping (_ approved: Bool) -> Void) {
     
-    dispatch_async(dispatch_get_main_queue()) {
+    DispatchQueue.main.async {
     
-        let custom = UIApplication.sharedApplication().windows[0].rootViewController?.storyboard?.instantiateViewControllerWithIdentifier("reqDialog") as! U2FRequestDialog
+        let custom = UIApplication.shared.windows[0].rootViewController?.storyboard?.instantiateViewController(withIdentifier: "reqDialog") as! U2FRequestDialog
         
         custom.type = type
         custom.challenge = challenge
         custom.appName = appName
         custom.userID = userID
-        custom.resultHandler = { (approved: Bool) in dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0)) { onResult(approved: approved) } }
+        custom.resultHandler = { (approved: Bool) in DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.high).async { onResult(approved) } }
         
-        custom.modalPresentationStyle = .Popover
-        custom.modalTransitionStyle = .CoverVertical
+        custom.modalPresentationStyle = .popover
+        custom.modalTransitionStyle = .coverVertical
         
-        UIApplication.sharedApplication().windows[0].rootViewController?.presentViewController(custom, animated: true, completion: nil)
+        UIApplication.shared.windows[0].rootViewController?.present(custom, animated: true, completion: nil)
         
     }
     

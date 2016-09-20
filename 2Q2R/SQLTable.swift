@@ -14,19 +14,19 @@
 
 @objc(SQLTable)
 class SQLTable:NSObject {
-	private var table:String!
+	fileprivate var table:String!
 	
-	private static var table:String {
-		let cls = "\(self.classForCoder())".lowercaseString
-		let tnm = cls.hasSuffix("y") ? cls.substringToIndex(cls.endIndex.predecessor()) + "ies" : cls + "s"
+	fileprivate static var table:String {
+		let cls = "\(self.classForCoder())".lowercased()
+		let tnm = cls.hasSuffix("y") ? cls.substring(to: cls.characters.index(before: cls.endIndex)) + "ies" : cls + "s"
 		return tnm
 	}
 	
 	required override init() {
 		super.init()
 		// Table name
-		let cls = "\(self.classForCoder)".lowercaseString
-		let tnm = cls.hasSuffix("y") ? cls.substringToIndex(cls.endIndex.predecessor()) + "ies" : cls + "s"
+		let cls = "\(self.classForCoder)".lowercased()
+		let tnm = cls.hasSuffix("y") ? cls.substring(to: cls.characters.index(before: cls.endIndex)) + "ies" : cls + "s"
 		self.table = tnm
 	}
 	
@@ -39,16 +39,16 @@ class SQLTable:NSObject {
 		return []
 	}
 	
-	func setPrimaryKey(val:AnyObject) {
+	func setPrimaryKey(_ val:AnyObject) {
 		setValue(val, forKey:primaryKey())
 	}
 
 	func getPrimaryKey() -> AnyObject? {
-		return valueForKey(primaryKey())
+		return value(forKey: primaryKey()) as AnyObject?
 	}
 	
 	// MARK:- Class Methods
-	class func rows(filter:String="", order:String="", limit:Int=0) -> [SQLTable] {
+	class func rows(_ filter:String="", order:String="", limit:Int=0) -> [SQLTable] {
 		var sql = "SELECT * FROM \(table)"
 		if !filter.isEmpty {
 			sql += " WHERE \(filter)"
@@ -62,7 +62,7 @@ class SQLTable:NSObject {
 		return self.rowsFor(sql)
 	}
 
-	class func rowsFor(sql:String="") -> [SQLTable] {
+	class func rowsFor(_ sql:String="") -> [SQLTable] {
 		var res = [SQLTable]()
 		let tmp = self.init()
 		let data = tmp.values()
@@ -82,7 +82,7 @@ class SQLTable:NSObject {
 		
 	}
 	
-	class func rowByID(rid:Int) -> SQLTable? {
+	class func rowByID(_ rid:Int) -> SQLTable? {
 		let row = self.init()
 		let data = row.values()
 		let db = SQLiteDB.sharedInstance
@@ -99,7 +99,7 @@ class SQLTable:NSObject {
 		return row
 	}
 	
-	class func count(filter:String="") -> Int {
+	class func count(_ filter:String="") -> Int {
 		let db = SQLiteDB.sharedInstance
 		var sql = "SELECT COUNT(*) AS count FROM \(table)"
 		if !filter.isEmpty {
@@ -115,7 +115,7 @@ class SQLTable:NSObject {
 		return 0
 	}
 	
-	class func row(rowNumber:Int, filter:String="", order:String="") -> SQLTable? {
+	class func row(_ rowNumber:Int, filter:String="", order:String="") -> SQLTable? {
 		let row = self.init()
 		let data = row.values()
 		let db = SQLiteDB.sharedInstance
@@ -140,7 +140,7 @@ class SQLTable:NSObject {
 		return row
 	}
 	
-	class func remove(filter:String = "") -> Bool {
+	class func remove(_ filter:String = "") -> Bool {
 		let db = SQLiteDB.sharedInstance
 		let sql:String
 		if filter.isEmpty {
@@ -228,41 +228,41 @@ class SQLTable:NSObject {
 //		return res
 //	}
 	
-	private func values() -> [String:AnyObject] {
+	fileprivate func values() -> [String:AnyObject] {
 		var res = [String:AnyObject]()
 		let obj = Mirror(reflecting:self)
-		for (_, attr) in obj.children.enumerate() {
+		for (_, attr) in obj.children.enumerated() {
 			if let name = attr.label {
 				// Ignore special properties and lazy vars
 				if ignoredKeys().contains(name) || name.hasSuffix(".storage") {
 					continue
 				}
-				res[name] = getValue(attr.value as! AnyObject)
+				res[name] = getValue(attr.value as AnyObject)
 			}
 		}
 		return res
 	}
 	
-	private func getValue(val:AnyObject) -> AnyObject {
+	fileprivate func getValue(_ val:AnyObject) -> AnyObject {
 		if val is String {
-			return val as! String
+			return val as! String as AnyObject
 		} else if val is Int {
-			return val as! Int
+			return val as! Int as AnyObject
 		} else if val is Float {
-			return val as! Float
+			return val as! Float as AnyObject
 		} else if val is Double {
-			return val as! Double
+			return val as! Double as AnyObject
 		} else if val is Bool {
-			return val as! Bool
-		} else if val is NSDate {
-			return val as! NSDate
-		} else if val is NSData {
-			return val as! NSData
+			return val as! Bool as AnyObject
+		} else if val is Date {
+			return val as! Date as AnyObject
+		} else if val is Data {
+			return val as! Data as AnyObject
 		}
-		return "nAn"
+		return "nAn" as AnyObject
 	}
 	
-	private func getSQL(data:[String:AnyObject], forInsert:Bool = true) -> (String, [AnyObject]?) {
+	fileprivate func getSQL(_ data:[String:AnyObject], forInsert:Bool = true) -> (String, [AnyObject]?) {
 		var sql = ""
 		var params:[AnyObject]? = nil
 		if forInsert {

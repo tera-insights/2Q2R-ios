@@ -24,10 +24,10 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         super.viewDidLoad()
         
         scanFrame.layer.borderWidth = 3
-        scanFrame.layer.borderColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.6).CGColor
+        scanFrame.layer.borderColor = UIColor(red: 1, green: 1, blue: 1, alpha: 0.6).cgColor
         
         // Initialize the camera
-        let captureDevice = AVCaptureDevice.defaultDeviceWithMediaType(AVMediaTypeVideo)
+        let captureDevice = AVCaptureDevice.defaultDevice(withMediaType: AVMediaTypeVideo)
         
         do {
             
@@ -46,7 +46,7 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         // Describe what codes should be captured
         let captureMetadataOutput = AVCaptureMetadataOutput()
         captureSession?.addOutput(captureMetadataOutput)
-        captureMetadataOutput.setMetadataObjectsDelegate(self, queue: dispatch_get_main_queue())
+        captureMetadataOutput.setMetadataObjectsDelegate(self, queue: DispatchQueue.main)
         captureMetadataOutput.metadataObjectTypes = [AVMetadataObjectTypeQRCode]
         
         // Start camera preview
@@ -54,28 +54,28 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
         previewLayer?.videoGravity = AVLayerVideoGravityResizeAspectFill
         previewLayer?.frame = view.layer.bounds
         view.layer.addSublayer(previewLayer!)
-        view.bringSubviewToFront(scanFrame)
-        view.bringSubviewToFront(scanLabel)
+        view.bringSubview(toFront: scanFrame)
+        view.bringSubview(toFront: scanLabel)
         
         // Begin video capture
         captureSession?.startRunning()
         
     }
     
-    override func viewDidAppear(animated: Bool) {
+    override func viewDidAppear(_ animated: Bool) {
         
         shouldReceiveInput = true
         captureSession?.startRunning()
         
     }
     
-    override func viewDidDisappear(animated: Bool) {
+    override func viewDidDisappear(_ animated: Bool) {
         
         captureSession?.stopRunning()
         
     }
     
-    func captureOutput(captureOutput: AVCaptureOutput!, didOutputMetadataObjects metadataObjects: [AnyObject]!, fromConnection connection: AVCaptureConnection!) {
+    func captureOutput(_ captureOutput: AVCaptureOutput!, didOutputMetadataObjects metadataObjects: [Any]!, from connection: AVCaptureConnection!) {
         
         if !shouldReceiveInput {
             return
@@ -90,7 +90,7 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
                 if let message = metadata.stringValue {
                     
                     shouldReceiveInput = false
-                    navigationController?.popViewControllerAnimated(true)
+                    navigationController?.popViewController(animated: true)
                     process2Q2RRequest(message)?.execute()
                     
                 }

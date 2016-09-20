@@ -10,7 +10,7 @@ import Foundation
 import UIKit
 
 enum ReqType {
-    case Register, Authenticate
+    case register, authenticate
 }
 
 class U2FRequestDialog: UIViewController {
@@ -20,7 +20,7 @@ class U2FRequestDialog: UIViewController {
     var appName: String!
     var userID: String!
     
-    var resultHandler: ((approved: Bool) -> Void)!
+    var resultHandler: ((_ approved: Bool) -> Void)!
     
     @IBOutlet weak var typeLabel: UILabel!
     @IBOutlet weak var challengeFirst8: UILabel!
@@ -30,7 +30,7 @@ class U2FRequestDialog: UIViewController {
     
     @IBAction func approveAction() {
         
-        dismissViewControllerAnimated(true) {
+        dismiss(animated: true) {
             
             self.resultHandler(approved: true)
             
@@ -40,7 +40,7 @@ class U2FRequestDialog: UIViewController {
     
     @IBAction func declineAction() {
         
-        dismissViewControllerAnimated(true) {
+        dismiss(animated: true) {
             
             self.resultHandler(approved: false)
             
@@ -52,7 +52,7 @@ class U2FRequestDialog: UIViewController {
         
         super.viewDidLoad()
         
-        typeLabel.text = type == .Register ? "Register?" : "Authenticate?"
+        typeLabel.text = type == .register ? "Register?" : "Authenticate?"
         challengeFirst8.text = "\(challenge.subString(0, length: 4)) \(challenge.subString(4, length: 4))"
         challengeNext20.text = "\(challenge.subString(8, length: 4)) \(challenge.subString(12, length: 4)) \(challenge.subString(16, length: 4)) \(challenge.subString(20, length: 4)) \(challenge.subString(24, length: 4))"
         appNameLabel.text = appName
