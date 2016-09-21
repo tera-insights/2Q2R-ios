@@ -96,6 +96,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        
+        print("Received iOS notification.")
     
         guard let _ = userInfo["authData"] else {
             
@@ -123,7 +125,7 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
     
     func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
         
-        // TODO: Show the user visual notifications to open app.
+        // Not sure what this method does.
         
     }
     
@@ -132,6 +134,8 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
 extension AppDelegate: FIRMessagingDelegate {
     
     func applicationReceivedRemoteMessage(_ message: FIRMessagingRemoteMessage) {
+        
+        print("Received Firebase notification.")
         
         guard let _ = message.appData["authData"] else {
             

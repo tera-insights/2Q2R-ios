@@ -293,13 +293,10 @@ class U2FActionRegister: U2FAction {
             
         }
         
-        print("Bytes to sign: \(data as NSData)")
-        
         var hashedData = genEmptyBuffer(withLength: Int(CC_SHA256_DIGEST_LENGTH))
         let hashedDataPointer = hashedData.withUnsafeMutableBytes { mutableBytes in
             CC_SHA256((data as NSData).bytes, CC_LONG(data.count), mutableBytes)
         }
-        print(hashedData as NSData)
         
         var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
         var signedHash = genEmptyBuffer(withLength: signedHashLength)
@@ -325,9 +322,6 @@ class U2FActionRegister: U2FAction {
             
         }
         
-        print("Signed hash: \(signedHash)")
-        print("Signed hash length: \(signedHashLength)")
-        
         return signedHash.subdata(in: 0..<signedHashLength)
         
     }
@@ -339,7 +333,7 @@ class U2FActionRegister: U2FAction {
             let registrationData = NSMutableData()
             let bytesToSign = NSMutableData()
             
-            let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL)\"}"
+            let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL!)\"}"
             
             var futureUse: UInt8 = 0x00
             var reserved: UInt8 = 0x05
@@ -367,8 +361,8 @@ class U2FActionRegister: U2FAction {
                         "type": "2q2r",
                         "deviceName": UIDevice.current.name,
                         "fcmToken": FIRInstanceID.instanceID().token()!,
-                        "clientData": clientData.asBase64(websafe: false),
-                        "registrationData": registrationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
+                        "clientData": clientData.asBase64(websafe: true),
+                        "registrationData": registrationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0)).makeWebsafe()
                     ] as AnyObject
                 ]
                 
@@ -494,13 +488,10 @@ class U2FActionAuthenticate: U2FAction {
             
         }
         
-        print("Bytes to sign: \(data as NSData)")
-        
         var hashedData = genEmptyBuffer(withLength: Int(CC_SHA256_DIGEST_LENGTH))
         let hashedDataPointer = hashedData.withUnsafeMutableBytes { mutableBytes in
             CC_SHA256((data as NSData).bytes, CC_LONG(data.count), mutableBytes)
         }
-        print(hashedData as NSData)
         
         var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
         var signedHash = genEmptyBuffer(withLength: signedHashLength)
@@ -526,23 +517,19 @@ class U2FActionAuthenticate: U2FAction {
             
         }
         
-        print("Signed hash: \(signedHash)")
-        print("Signed hash length: \(signedHashLength)")
-        
         return signedHash.subdata(in: 0..<signedHashLength)
         
     }
     
     fileprivate func sendAuthenticationResponse() {
         
-        let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL)\"}"
+        let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL!)\"}"
         
         let dataToBeSigned = NSMutableData()
         
         let applicationParameter: Data = self.appID.sha256() as Data
         var userPresence: UInt8 = 0x1
-        var counterBytes: UInt32 = UInt32(self.counter)
-        print("Counter bytes: \(counterBytes)")
+        var counterBytes: UInt32 = UInt32(self.counter).byteSwapped // iOS uses little-endian, server expects big-endian
         let challengeParameter: Data = clientData.sha256() as Data
         
         dataToBeSigned.append(applicationParameter)
@@ -561,9 +548,9 @@ class U2FActionAuthenticate: U2FAction {
             let authenticationResponse: [String:AnyObject] = [
                 "successful": true as AnyObject,
                 "data": [
-                    "clientData": clientData.asBase64(websafe: false),
-                    "signatureData": authenticationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-                    ] as AnyObject
+                    "clientData": clientData.asBase64(websafe: true),
+                    "signatureData": authenticationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0)).makeWebsafe()
+                ] as AnyObject
             ]
             
             let authenticationURL = baseURL + (baseURL.substring(from: baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
