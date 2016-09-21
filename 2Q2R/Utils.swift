@@ -178,7 +178,7 @@ func confirmResponseFromBackgroundThread(_ type: ReqType, challenge: String, app
         custom.challenge = challenge
         custom.appName = appName
         custom.userID = userID
-        custom.resultHandler = { (approved: Bool) in DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.high).async { onResult(approved) } }
+        custom.resultHandler = { (approved: Bool) in DispatchQueue.global().async { onResult(approved) } }
         
         custom.modalPresentationStyle = .popover
         custom.modalTransitionStyle = .coverVertical

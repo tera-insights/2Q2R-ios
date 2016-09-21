@@ -133,7 +133,23 @@ extension AppDelegate: FIRMessagingDelegate {
     
     func applicationReceivedRemoteMessage(_ message: FIRMessagingRemoteMessage) {
         
-        print(message.appData)
+        guard let _ = message.appData["authData"] else {
+            
+            print("Just received a non-2Q2R notification!")
+            return
+            
+        }
+        
+        if let u2fAction = process2Q2RRequest(message.appData["authData"] as! String) {
+            
+            u2fAction.execute()
+            
+        } else {
+            
+            print("Incorrectly formatted 2Q2R request.")
+            
+        }
+
         process2Q2RRequest(message.appData["authData"] as! String)?.execute()
         
     }

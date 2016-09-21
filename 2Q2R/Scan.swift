@@ -90,7 +90,7 @@ class Scan: UIViewController, AVCaptureMetadataOutputObjectsDelegate {
                 if let message = metadata.stringValue {
                     
                     shouldReceiveInput = false
-                    navigationController?.popViewController(animated: true)
+                    navigationController!.popViewController(animated: true)
                     process2Q2RRequest(message)?.execute()
                     
                 }

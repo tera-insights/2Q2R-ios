@@ -116,7 +116,7 @@ class U2FActionRegister: U2FAction {
     
     func execute() {
         
-        DispatchQueue.global(priority: DispatchQueue.GlobalQueuePriority.high).async {
+        DispatchQueue.global().async {
             
             self.fetchServerInfo()
             
@@ -178,7 +178,15 @@ class U2FActionRegister: U2FAction {
         // Generate a keyhandle, which will be returned as an alias for the private key
         let numBytes = Int(U2FActionRegister.keyHandleLength)
         var randomBytes = [UInt8](repeating: 0, count: numBytes)
-        SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
+        var err = SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
+        
+        guard err == errSecSuccess else {
+            
+            displayError(.unspecified, withTitle: "Failed to Generate Key Handle")
+            return nil
+            
+        }
+        
         let data = Data(bytes: randomBytes)
         var alias = data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
         alias.makeWebsafe()
@@ -207,7 +215,7 @@ class U2FActionRegister: U2FAction {
         ] as AnyObject
         
         var pubKeyRef, privKeyRef: SecKey?
-        var err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
+        err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
         
         guard let _ = pubKeyRef , err == errSecSuccess else {
             
