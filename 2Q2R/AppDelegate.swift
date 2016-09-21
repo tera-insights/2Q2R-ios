@@ -9,6 +9,7 @@
 import UIKit
 import Firebase
 import FirebaseMessaging
+import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -20,7 +21,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Configure firebase
         if #available(iOS 10.0, *) {
             
+            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+            let unCenter: UNUserNotificationCenter = UNUserNotificationCenter.current()
             
+            unCenter.requestAuthorization(options: authOptions, completionHandler: { _,_ in })
+            unCenter.delegate = self
+            FIRMessaging.messaging().remoteMessageDelegate = self
             
         } else {
             
@@ -38,6 +44,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         initializeDatabase()
         
         return true
+        
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -90,11 +97,36 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     
     func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any], fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
     
-        print(userInfo)
-        process2Q2RRequest(userInfo	["authData"] as! String)?.execute()
+        guard let _ = userInfo["authData"] else {
+            
+            print("Just received a non-2Q2R notification!")
+            return
+            
+        }
+        
+        if let u2fAction = process2Q2RRequest(userInfo["authData"] as! String) {
+            
+            u2fAction.execute()
+            
+        } else {
+            
+            print("Incorrectly formatted 2Q2R request.")
+            
+        }
         
     }
 
+}
+
+@available(iOS 10, *)
+extension AppDelegate: UNUserNotificationCenterDelegate {
+    
+    func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification, withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
+        
+        // TODO: Show the user visual notifications to open app.
+        
+    }
+    
 }
 
 extension AppDelegate: FIRMessagingDelegate {

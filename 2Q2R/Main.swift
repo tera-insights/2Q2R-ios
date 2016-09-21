@@ -29,17 +29,6 @@ var allKeys: [[String:AnyObject]] = getAllKeys() {
 
 class Main: UITableViewController {
     
-    @IBAction func onAboutAction(_ sender: AnyObject) {
-        
-        let infoDialog = storyboard?.instantiateViewController(withIdentifier: "about")
-        
-        infoDialog?.modalPresentationStyle = .formSheet
-        infoDialog?.modalTransitionStyle = .crossDissolve
-        
-        present(infoDialog!, animated: true, completion: nil)
-        
-    }
-    
     @IBAction func onScanAction(_ sender: AnyObject) {
         
         let view = self.storyboard?.instantiateViewController(withIdentifier: "scan")

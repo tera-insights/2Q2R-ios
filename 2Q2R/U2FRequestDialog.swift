@@ -52,9 +52,11 @@ class U2FRequestDialog: UIViewController {
         
         super.viewDidLoad()
         
+        challengeFirst8.textColor = UIColor(red: 40/255, green: 100/255, blue: 1, alpha: 1)
+        
         typeLabel.text = type == .register ? "Register?" : "Authenticate?"
-        challengeFirst8.text = "\(challenge.subString(0, length: 4)) \(challenge.subString(4, length: 4))"
-        challengeNext20.text = "\(challenge.subString(8, length: 4)) \(challenge.subString(12, length: 4)) \(challenge.subString(16, length: 4)) \(challenge.subString(20, length: 4)) \(challenge.subString(24, length: 4))"
+        challengeFirst8.text = "\(challenge.substring(0, length: 4)) \(challenge.substring(4, length: 4))"
+        challengeNext20.text = "\(challenge.substring(8, length: 4)) \(challenge.substring(12, length: 4)) \(challenge.substring(16, length: 4)) \(challenge.substring(20, length: 4)) \(challenge.substring(24, length: 4))"
         appNameLabel.text = appName
         userIDLabel.text = userID
         

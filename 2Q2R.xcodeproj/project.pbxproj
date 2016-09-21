@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		C7061FB81D8AEAD900B595DF /* U2FAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7061FB71D8AEAD900B595DF /* U2FAction.swift */; };
+		C727F0DD1D92CF56006562F3 /* About.swift in Sources */ = {isa = PBXBuildFile; fileRef = C727F0DC1D92CF56006562F3 /* About.swift */; };
 		C73B7E4C1D8C8141006C1870 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C73B7E4B1D8C8141006C1870 /* GoogleService-Info.plist */; };
 		C73B7E4E1D8C857E006C1870 /* U2FRequestDialog.swift in Sources */ = {isa = PBXBuildFile; fileRef = C73B7E4D1D8C857E006C1870 /* U2FRequestDialog.swift */; };
 		C74F50A11D91DBC600E589CB /* FMDatabase.m in Sources */ = {isa = PBXBuildFile; fileRef = C74F50971D91DBC600E589CB /* FMDatabase.m */; };
@@ -35,6 +36,7 @@
 		8F597250BE9D94FCFCC27FC2 /* Pods-2Q2R.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-2Q2R.release.xcconfig"; path = "Pods/Target Support Files/Pods-2Q2R/Pods-2Q2R.release.xcconfig"; sourceTree = "<group>"; };
 		AADED78D0209E6074F87F72B /* Pods-2Q2R.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-2Q2R.debug.xcconfig"; path = "Pods/Target Support Files/Pods-2Q2R/Pods-2Q2R.debug.xcconfig"; sourceTree = "<group>"; };
 		C7061FB71D8AEAD900B595DF /* U2FAction.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = U2FAction.swift; sourceTree = "<group>"; };
+		C727F0DC1D92CF56006562F3 /* About.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = About.swift; sourceTree = "<group>"; };
 		C73B7E4B1D8C8141006C1870 /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		C73B7E4D1D8C857E006C1870 /* U2FRequestDialog.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = U2FRequestDialog.swift; sourceTree = "<group>"; };
 		C74F50961D91DBC600E589CB /* FMDatabase.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDatabase.h; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 				FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */,
 				FE727F931D83151C001DDA30 /* KeyDetails.swift */,
 				C73B7E4D1D8C857E006C1870 /* U2FRequestDialog.swift */,
+				C727F0DC1D92CF56006562F3 /* About.swift */,
 			);
 			name = Controllers;
 			sourceTree = "<group>";
@@ -318,6 +321,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FE8C3FAC1D6CFA3A000892BC /* KeyCell.swift in Sources */,
+				C727F0DD1D92CF56006562F3 /* About.swift in Sources */,
 				FEA10E2E1D6C99D5002E13AB /* Main.swift in Sources */,
 				C74F50A11D91DBC600E589CB /* FMDatabase.m in Sources */,
 				FEA10E2C1D6C99D5002E13AB /* AppDelegate.swift in Sources */,

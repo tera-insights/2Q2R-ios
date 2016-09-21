@@ -285,23 +285,20 @@ class U2FActionRegister: U2FAction {
             
         }
         
-        var hashedDataPointer: UnsafePointer<UInt8>! = nil
-        var signedHashPointer: UnsafeMutablePointer<UInt8>! = nil
+        print("Bytes to sign: \(data as NSData)")
         
-        var hashedData = Data(capacity: Int(CC_SHA256_DIGEST_LENGTH))
-        hashedData.withUnsafeMutableBytes() { mutableBytes in
-            hashedDataPointer = UnsafePointer<UInt8>(mutableBytes)
+        var hashedData = genEmptyBuffer(withLength: Int(CC_SHA256_DIGEST_LENGTH))
+        let hashedDataPointer = hashedData.withUnsafeMutableBytes { mutableBytes in
+            CC_SHA256((data as NSData).bytes, CC_LONG(data.count), mutableBytes)
         }
-        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer<UInt8>(mutating: hashedDataPointer))
+        print(hashedData as NSData)
         
         var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
-        var signedHash = Data(capacity: signedHashLength)
+        var signedHash = genEmptyBuffer(withLength: signedHashLength)
         
-        let _ = signedHash.withUnsafeMutableBytes() { mutableBytes in
-            signedHashPointer = UnsafeMutablePointer<UInt8>(mutableBytes)
+        signedHash.withUnsafeMutableBytes { mutableBytes in
+            error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer!, hashedData.count, mutableBytes, &signedHashLength)
         }
-        
-        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer, hashedData.count, signedHashPointer, &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -319,6 +316,9 @@ class U2FActionRegister: U2FAction {
             return nil
             
         }
+        
+        print("Signed hash: \(signedHash)")
+        print("Signed hash length: \(signedHashLength)")
         
         return signedHash.subdata(in: 0..<signedHashLength)
         
@@ -486,23 +486,20 @@ class U2FActionAuthenticate: U2FAction {
             
         }
         
-        var hashedDataPointer: UnsafePointer<UInt8>! = nil
-        var signedHashPointer: UnsafeMutablePointer<UInt8>! = nil
+        print("Bytes to sign: \(data as NSData)")
         
-        var hashedData = Data(capacity: Int(CC_SHA256_DIGEST_LENGTH))
-        hashedData.withUnsafeMutableBytes() { mutableBytes in
-            hashedDataPointer = UnsafePointer<UInt8>(mutableBytes)
+        var hashedData = genEmptyBuffer(withLength: Int(CC_SHA256_DIGEST_LENGTH))
+        let hashedDataPointer = hashedData.withUnsafeMutableBytes { mutableBytes in
+            CC_SHA256((data as NSData).bytes, CC_LONG(data.count), mutableBytes)
         }
-        CC_SHA256((data as NSData).bytes, CC_LONG(data.count), UnsafeMutablePointer<UInt8>(mutating: hashedDataPointer))
+        print(hashedData as NSData)
         
         var signedHashLength = 256 // Allocate way more bytes than needed! Once SecKeyRawSign is done, it will rewrite this value to the number of bytes it actually used in the buffer. No clue why.
-        var signedHash = Data(capacity: signedHashLength)
+        var signedHash = genEmptyBuffer(withLength: signedHashLength)
         
-        let _ = signedHash.withUnsafeMutableBytes() { mutableBytes in
-            signedHashPointer = UnsafeMutablePointer<UInt8>(mutableBytes)
+        signedHash.withUnsafeMutableBytes { mutableBytes in
+            error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer!, hashedData.count, mutableBytes, &signedHashLength)
         }
-        
-        error = SecKeyRawSign(privateKey as! SecKey, .PKCS1, hashedDataPointer, hashedData.count, signedHashPointer, &signedHashLength)
         
         guard error == errSecSuccess else {
             
@@ -520,6 +517,9 @@ class U2FActionAuthenticate: U2FAction {
             return nil
             
         }
+        
+        print("Signed hash: \(signedHash)")
+        print("Signed hash length: \(signedHashLength)")
         
         return signedHash.subdata(in: 0..<signedHashLength)
         

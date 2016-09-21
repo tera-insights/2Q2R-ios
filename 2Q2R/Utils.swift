@@ -49,6 +49,19 @@ extension String {
         
     }
     
+    func substring(_ from: Int, length: Int) -> String {
+        
+        var startIndex = self.startIndex
+        var finalIndex: String.Index
+        
+        for _ in 0..<from { startIndex = self.index(after: startIndex) }
+        finalIndex = startIndex
+        for _ in 0..<length { finalIndex = self.index(after: finalIndex) }
+        
+        return self.substring(with: startIndex..<finalIndex)
+        
+    }
+    
 }
 
 func decodeFromWebsafeBase64ToBase64Data(_ websafeString: String) -> Data {
@@ -173,6 +186,14 @@ func confirmResponseFromBackgroundThread(_ type: ReqType, challenge: String, app
         UIApplication.shared.windows[0].rootViewController?.present(custom, animated: true, completion: nil)
         
     }
+    
+}
+
+func genEmptyBuffer(withLength length: Int) -> Data {
+    
+    let bytes: [UInt8] = [UInt8](repeating: 0, count: length)
+    
+    return Data(bytes: bytes)
     
 }
 
