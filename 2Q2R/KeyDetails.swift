@@ -12,14 +12,14 @@ import UIKit
 class KeyDetails: UITableViewController {
     
     var appName: String = "?"
-    var baseURL: String = "?"
+    var appURL: String = "?"
     var userID: String = "?"
     var counter: String = "?"
     var dateUsed: String = "?"
     var timeUsed: String = "?"
     
     @IBOutlet weak var appNameOutlet: UILabel!
-    @IBOutlet weak var baseURLOutlet: UILabel!
+    @IBOutlet weak var appURLOutlet: UILabel!
     @IBOutlet weak var userIDOutlet: UILabel!
     @IBOutlet weak var counterOutlet: UILabel!
     @IBOutlet weak var dateOutlet: UILabel!
@@ -28,7 +28,7 @@ class KeyDetails: UITableViewController {
     override func viewDidLoad() {
         
         appNameOutlet.text = appName
-        baseURLOutlet.text = baseURL
+        appURLOutlet.text = appURL
         userIDOutlet.text = userID
         counterOutlet.text = counter
         dateOutlet.text = dateUsed

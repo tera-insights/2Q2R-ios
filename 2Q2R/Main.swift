@@ -106,7 +106,7 @@ class Main: UITableViewController {
         let timeUsed = formatter.string(from: dateTimeUsed)
         
         keyDetailsView.appName = keyDesc["appName"] as! String
-        keyDetailsView.baseURL = keyDesc["baseURL"] as! String
+        keyDetailsView.appURL = keyDesc["appURL"] as! String
         keyDetailsView.userID = keyDesc["userID"] as! String
         keyDetailsView.counter = "\(keyDesc["counter"]!)"
         keyDetailsView.dateUsed = dateUsed

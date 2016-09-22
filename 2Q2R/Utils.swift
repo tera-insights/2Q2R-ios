@@ -32,9 +32,9 @@ extension String {
         
     }
     
-    mutating func makeWebsafe() {
+    func makeWebsafe() -> String {
         
-        self = self.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
+        return self.replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
         
     }
     
@@ -133,22 +133,6 @@ func sendJSONToURL(_ urlString: String, json: [String:AnyObject]?, method: Strin
         print("Incorrectly formatted JSON.")
         
     }
-    
-}
-
-func getCurrentDateTime() -> Date {
-    
-    let now = Date()
-    var components = DateComponents()
-    let calendar = Calendar.current
-    
-    components.day = (calendar as NSCalendar).component(.day, from: now)
-    components.month = (calendar as NSCalendar).component(.month, from: now)
-    components.year = (calendar as NSCalendar).component(.year, from: now)
-    components.hour = (calendar as NSCalendar).component(.hour, from: now)
-    components.minute = (calendar as NSCalendar).component(.minute, from: now)
-    
-    return calendar.date(from: components)!
     
 }
 

@@ -32,7 +32,7 @@ func initializeDatabase() {
     do {
         
         try db.executeUpdate("CREATE TABLE IF NOT EXISTS keys(keyID TEXT PRIMARY KEY NOT NULL, appID TEXT NOT NULL, counter TEXT NOT NULL, userID TEXT NOT NULL, used DATETIME NOT NULL)", values: nil)
-        try db.executeUpdate("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, baseURL TEXT NOT NULL)", values: nil)
+        try db.executeUpdate("CREATE TABLE IF NOT EXISTS servers(appID TEXT PRIMARY KEY NOT NULL, appName TEXT NOT NULL, appURL TEXT NOT NULL)", values: nil)
         
         database = db
         
@@ -48,7 +48,7 @@ func insertNewKey(_ keyID: String, appID: String, userID: String) {
     
     do {
         
-        try database.executeUpdate("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(getCurrentDateTime())');", values: nil)
+        try database.executeUpdate("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(Date())');", values: nil)
         
     } catch let error {
         
@@ -58,11 +58,11 @@ func insertNewKey(_ keyID: String, appID: String, userID: String) {
     
 }
 
-func insertNewServer(_ appID: String, appName: String, baseURL: String) {
+func insertNewServer(_ appID: String, appName: String, appURL: String) {
     
     do {
         
-        try database.executeUpdate("INSERT INTO servers VALUES ('\(appID)', '\(appName)', '\(baseURL)')", values: nil)
+        try database.executeUpdate("INSERT INTO servers VALUES ('\(appID)', '\(appName)', '\(appURL)')", values: nil)
         
     } catch let error {
         
@@ -107,15 +107,15 @@ func getUserID(forKey keyID: String) -> String? {
     
 }
 
-func getInfo(forServer appID: String) -> (appName: String, baseURL: String)? {
+func getInfo(forServer appID: String) -> (appName: String, appURL: String)? {
     
     do {
         
-        let query = try database.executeQuery("SELECT appName, baseURL FROM servers WHERE appID = '\(appID)'", values: nil)
+        let query = try database.executeQuery("SELECT appName, appURL FROM servers WHERE appID = '\(appID)'", values: nil)
         
         if query.next() {
         
-            return (query.string(forColumn: "appName"), query.string(forColumn: "baseURL"))
+            return (query.string(forColumn: "appName"), query.string(forColumn: "appURL"))
             
         }
         
@@ -135,14 +135,14 @@ func getRecentKeys() -> [[String:AnyObject]] {
     
     do {
         
-        let query = try database.executeQuery("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5", values: nil)
+        let query = try database.executeQuery("SELECT userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5", values: nil)
         
         while query.next() {
             
             result.append([
                 "userID": query.string(forColumn: "userID") as AnyObject,
                 "appName": query.string(forColumn: "appName") as AnyObject,
-                "baseURL": query.string(forColumn: "baseURL") as AnyObject,
+                "appURL": query.string(forColumn: "appURL") as AnyObject,
                 "used": query.date(forColumn: "used") as AnyObject,
                 "counter": Int(query.int(forColumn: "counter")) as AnyObject
             ])
@@ -165,14 +165,14 @@ func getAllKeys() -> [[String:AnyObject]] {
     
     do {
         
-        let query = try database.executeQuery("SELECT userID, appName, baseURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC", values: nil)
+        let query = try database.executeQuery("SELECT userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC", values: nil)
         
         while query.next() {
             
             result.append([
                 "userID": query.string(forColumn: "userID") as AnyObject,
                 "appName": query.string(forColumn: "appName") as AnyObject,
-                "baseURL": query.string(forColumn: "baseURL") as AnyObject,
+                "appURL": query.string(forColumn: "appURL") as AnyObject,
                 "used": query.date(forColumn: "used") as AnyObject,
                 "counter": Int(query.int(forColumn: "counter")) as AnyObject
                 ])
@@ -215,7 +215,7 @@ func setCounter(forKey keyID: String, to counter: Int) {
     
     do {
         
-        try database.executeUpdate("UPDATE keys SET counter = '\(counter)', used = '\(getCurrentDateTime())' WHERE keyID = '\(keyID)'", values: nil)
+        try database.executeUpdate("UPDATE keys SET counter = '\(counter)', used = '\(Date())' WHERE keyID = '\(keyID)'", values: nil)
         
     } catch let error {
         

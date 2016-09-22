@@ -16,6 +16,7 @@
 		C74F50A31D91DBC600E589CB /* FMDatabasePool.m in Sources */ = {isa = PBXBuildFile; fileRef = C74F509B1D91DBC600E589CB /* FMDatabasePool.m */; };
 		C74F50A41D91DBC600E589CB /* FMDatabaseQueue.m in Sources */ = {isa = PBXBuildFile; fileRef = C74F509D1D91DBC600E589CB /* FMDatabaseQueue.m */; };
 		C74F50A51D91DBC600E589CB /* FMResultSet.m in Sources */ = {isa = PBXBuildFile; fileRef = C74F50A01D91DBC600E589CB /* FMResultSet.m */; };
+		C7DC5BAC1D946324003CA71F /* KeyGenerator.m in Sources */ = {isa = PBXBuildFile; fileRef = C7DC5BAB1D946324003CA71F /* KeyGenerator.m */; };
 		FE727F941D83151C001DDA30 /* KeyDetails.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE727F931D83151C001DDA30 /* KeyDetails.swift */; };
 		FE8C3FAA1D6CCD50000892BC /* Scan.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C3FA91D6CCD50000892BC /* Scan.swift */; };
 		FE8C3FAC1D6CFA3A000892BC /* KeyCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */; };
@@ -50,6 +51,8 @@
 		C74F509E1D91DBC600E589CB /* FMDB.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMDB.h; sourceTree = "<group>"; };
 		C74F509F1D91DBC600E589CB /* FMResultSet.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = FMResultSet.h; sourceTree = "<group>"; };
 		C74F50A01D91DBC600E589CB /* FMResultSet.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = FMResultSet.m; sourceTree = "<group>"; };
+		C7DC5BAA1D946324003CA71F /* KeyGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = KeyGenerator.h; sourceTree = "<group>"; };
+		C7DC5BAB1D946324003CA71F /* KeyGenerator.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = KeyGenerator.m; sourceTree = "<group>"; };
 		FE727F931D83151C001DDA30 /* KeyDetails.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyDetails.swift; sourceTree = "<group>"; };
 		FE8C3FA91D6CCD50000892BC /* Scan.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Scan.swift; sourceTree = "<group>"; };
 		FE8C3FAB1D6CFA3A000892BC /* KeyCell.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = KeyCell.swift; sourceTree = "<group>"; };
@@ -91,6 +94,33 @@
 			name = Pods;
 			sourceTree = "<group>";
 		};
+		C7DC5BA81D9462B8003CA71F /* FMDB */ = {
+			isa = PBXGroup;
+			children = (
+				C74F50961D91DBC600E589CB /* FMDatabase.h */,
+				C74F50971D91DBC600E589CB /* FMDatabase.m */,
+				C74F50981D91DBC600E589CB /* FMDatabaseAdditions.h */,
+				C74F50991D91DBC600E589CB /* FMDatabaseAdditions.m */,
+				C74F509A1D91DBC600E589CB /* FMDatabasePool.h */,
+				C74F509B1D91DBC600E589CB /* FMDatabasePool.m */,
+				C74F509C1D91DBC600E589CB /* FMDatabaseQueue.h */,
+				C74F509D1D91DBC600E589CB /* FMDatabaseQueue.m */,
+				C74F509E1D91DBC600E589CB /* FMDB.h */,
+				C74F509F1D91DBC600E589CB /* FMResultSet.h */,
+				C74F50A01D91DBC600E589CB /* FMResultSet.m */,
+			);
+			name = FMDB;
+			sourceTree = "<group>";
+		};
+		C7DC5BA91D9462D4003CA71F /* Secure Enclave Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				C7DC5BAA1D946324003CA71F /* KeyGenerator.h */,
+				C7DC5BAB1D946324003CA71F /* KeyGenerator.m */,
+			);
+			name = "Secure Enclave Crypto";
+			sourceTree = "<group>";
+		};
 		FE0D46971D6F64FB00BE684A /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
@@ -128,17 +158,8 @@
 		FE9878741D6E3B07001B103B /* Third Party */ = {
 			isa = PBXGroup;
 			children = (
-				C74F50961D91DBC600E589CB /* FMDatabase.h */,
-				C74F50971D91DBC600E589CB /* FMDatabase.m */,
-				C74F50981D91DBC600E589CB /* FMDatabaseAdditions.h */,
-				C74F50991D91DBC600E589CB /* FMDatabaseAdditions.m */,
-				C74F509A1D91DBC600E589CB /* FMDatabasePool.h */,
-				C74F509B1D91DBC600E589CB /* FMDatabasePool.m */,
-				C74F509C1D91DBC600E589CB /* FMDatabaseQueue.h */,
-				C74F509D1D91DBC600E589CB /* FMDatabaseQueue.m */,
-				C74F509E1D91DBC600E589CB /* FMDB.h */,
-				C74F509F1D91DBC600E589CB /* FMResultSet.h */,
-				C74F50A01D91DBC600E589CB /* FMResultSet.m */,
+				C7DC5BA91D9462D4003CA71F /* Secure Enclave Crypto */,
+				C7DC5BA81D9462B8003CA71F /* FMDB */,
 				FE9878751D6E3B45001B103B /* Bridging-Header.h */,
 			);
 			name = "Third Party";
@@ -330,6 +351,7 @@
 				FE9878811D6E4346001B103B /* DBManagement.swift in Sources */,
 				FED1116B1D7755A100C3BA91 /* Empty.swift in Sources */,
 				C7061FB81D8AEAD900B595DF /* U2FAction.swift in Sources */,
+				C7DC5BAC1D946324003CA71F /* KeyGenerator.m in Sources */,
 				FE8C3FAA1D6CCD50000892BC /* Scan.swift in Sources */,
 				FEA6A6EF1D6DFD870054073C /* Utils.swift in Sources */,
 				FE727F941D83151C001DDA30 /* KeyDetails.swift in Sources */,

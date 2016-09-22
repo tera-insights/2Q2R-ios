@@ -104,7 +104,7 @@ class U2FActionRegister: U2FAction {
     
     fileprivate var appName: String! = "Uknown Server"
     fileprivate var appID: String!
-    fileprivate var baseURL: String!
+    fileprivate var appURL: String!
     
     init(challenge: String, infoURL: String, userID: String) {
         
@@ -136,7 +136,7 @@ class U2FActionRegister: U2FAction {
                     
                     self.appName = json["appName"] as! String
                     self.appID = json["appID"] as! String
-                    self.baseURL = json["baseURL"] as! String
+                    self.appURL = json["appURL"] as! String
                     
                     if userIsAlreadyRegistered(self.userID, forServer: self.appID) {
                         
@@ -178,7 +178,7 @@ class U2FActionRegister: U2FAction {
         // Generate a keyhandle, which will be returned as an alias for the private key
         let numBytes = Int(U2FActionRegister.keyHandleLength)
         var randomBytes = [UInt8](repeating: 0, count: numBytes)
-        var err = SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
+		var err: OSStatus = SecRandomCopyBytes(kSecRandomDefault, numBytes, &randomBytes)
         
         guard err == errSecSuccess else {
             
@@ -189,41 +189,41 @@ class U2FActionRegister: U2FAction {
         
         let data = Data(bytes: randomBytes)
         var alias = data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
-        alias.makeWebsafe()
-        
-        let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .touchIDCurrentSet, nil)!
-        
-        // Key pair parameters
-        var keyParams: [String:AnyObject] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-            kSecAttrKeySizeInBits as String: 256 as AnyObject
-        ]
-        
-        // Private key parameters
-        keyParams[kSecPrivateKeyAttrs as String] = [
-            kSecAttrIsPermanent as String: true,
-            kSecAttrLabel as String: "private",
-            kSecAttrApplicationTag as String: alias,
-            kSecAttrAccessControl as String: access
-        ] as AnyObject
-        
-        // Public key parameters
-        keyParams[kSecPublicKeyAttrs as String] = [
-            kSecAttrIsPermanent as String: true,
-            kSecAttrLabel as String: "public",
-            kSecAttrApplicationTag as String: alias
-        ] as AnyObject
-        
-        var pubKeyRef, privKeyRef: SecKey?
-        err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
-        
-        guard let _ = pubKeyRef , err == errSecSuccess else {
-            
-            displayError(err == errSecAuthFailed ? .userAuthNotSet : .unspecified, withTitle: "Key Generation Failed")
-            return nil
-            
-        }
-        
+		alias = alias.makeWebsafe()
+		
+		err = KeyGenerator.generatePairInSecureEnclave(withHandle: alias)
+		
+//        let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .touchIDCurrentSet, nil)!
+//        
+//        // Key pair parameters
+//        let keyParams: [String:AnyObject] = [
+//            kSecAttrKeyType as String: kSecAttrKeyTypeEC,
+//            kSecAttrKeySizeInBits as String: 256 as AnyObject,
+//            kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
+//            kSecPrivateKeyAttrs as String: [
+//                kSecAttrIsPermanent as String: true,
+//                kSecAttrLabel as String: "private",
+//                kSecAttrApplicationTag as String: alias,
+//                kSecAttrAccessControl as String: access
+//            ] as AnyObject,
+//            kSecPublicKeyAttrs as String: [
+//                kSecAttrIsPermanent as String: true,
+//                kSecAttrLabel as String: "public",
+//                kSecAttrApplicationTag as String: alias
+//                ] as AnyObject
+//        ]
+//        
+//        var pubKeyRef, privKeyRef: SecKey?
+//        err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
+//        
+//        guard let _ = pubKeyRef , err == errSecSuccess else {
+//            
+//            print(err)
+//            displayError(err == errSecAuthFailed ? .userAuthNotSet : .unspecified, withTitle: "Key Generation Failed")
+//            return nil
+//            
+//        }
+		
         // Export the public key for application use
         let query: [String:AnyObject] = [
             kSecClass as String: kSecClassKey,
@@ -333,7 +333,7 @@ class U2FActionRegister: U2FAction {
             let registrationData = NSMutableData()
             let bytesToSign = NSMutableData()
             
-            let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL!)\"}"
+            let clientData = "{\"type\":\"navigator.id.finishEnrollment\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.appURL!)\"}"
             
             var futureUse: UInt8 = 0x00
             var reserved: UInt8 = 0x05
@@ -341,7 +341,7 @@ class U2FActionRegister: U2FAction {
             var keyHandleLength = UInt8(keyHandle.count)
             
             bytesToSign.append(&futureUse, length: 1)
-            bytesToSign.append(self.appID.sha256() as Data)
+            bytesToSign.append(self.appURL.sha256() as Data)
             bytesToSign.append(clientData.sha256() as Data)
             bytesToSign.append(keyHandle)
             bytesToSign.append(keyRefs.pubKey)
@@ -363,12 +363,12 @@ class U2FActionRegister: U2FAction {
                         "fcmToken": FIRInstanceID.instanceID().token()!,
                         "clientData": clientData.asBase64(websafe: true),
                         "registrationData": registrationData.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0)).makeWebsafe()
-                    ] as AnyObject
+                        ] as AnyObject
                 ]
                 
                 print("FCM Token: \"\(FIRInstanceID.instanceID().token()!)\"")
                 
-                let regURL = self.baseURL + (self.baseURL.substring(from: self.baseURL.endIndex) == "/" ? "" : "/") + "v1/register"
+                let regURL = self.appURL + (self.appURL.substring(from: self.appURL.endIndex) == "/" ? "" : "/") + "v1/register"
                 
                 sendJSONToURL(regURL, json: registration, method: "POST") { (data: Data?, response: URLResponse?, error: Error?) in
                     
@@ -378,7 +378,7 @@ class U2FActionRegister: U2FAction {
                         
                         if getInfo(forServer: self.appID) == nil {
                             
-                            insertNewServer(self.appID, appName: self.appName, baseURL: self.baseURL)
+                            insertNewServer(self.appID, appName: self.appName, appURL: self.appURL)
                             
                         }
                         
@@ -413,7 +413,7 @@ class U2FActionAuthenticate: U2FAction {
     fileprivate let counter: Int
     
     fileprivate var appName: String!
-    fileprivate var baseURL: String!
+    fileprivate var appURL: String!
     
     init(appID: String, challenge: String, keyID: String, counter: Int) {
         
@@ -433,7 +433,7 @@ class U2FActionAuthenticate: U2FAction {
             if let serverInfo = getInfo(forServer: self.appID) {
                 
                 self.appName = serverInfo.appName
-                self.baseURL = serverInfo.baseURL
+                self.appURL = serverInfo.appURL
                 
                 if let userID = getUserID(forKey: self.keyID) {
                     
@@ -523,11 +523,11 @@ class U2FActionAuthenticate: U2FAction {
     
     fileprivate func sendAuthenticationResponse() {
         
-        let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.baseURL!)\"}"
+        let clientData = "{\"typ\":\"navigator.id.getAssertion\",\"challenge\":\"\(self.challenge)\",\"origin\":\"\(self.appURL!)\"}"
         
         let dataToBeSigned = NSMutableData()
         
-        let applicationParameter: Data = self.appID.sha256() as Data
+        let applicationParameter: Data = self.appURL.sha256() as Data
         var userPresence: UInt8 = 0x1
         var counterBytes: UInt32 = UInt32(self.counter).byteSwapped // iOS uses little-endian, server expects big-endian
         let challengeParameter: Data = clientData.sha256() as Data
@@ -553,7 +553,7 @@ class U2FActionAuthenticate: U2FAction {
                 ] as AnyObject
             ]
             
-            let authenticationURL = baseURL + (baseURL.substring(from: baseURL.endIndex) == "/" ? "" : "/") + "v1/auth"
+            let authenticationURL = appURL + (appURL.substring(from: appURL.endIndex) == "/" ? "" : "/") + "v1/auth"
             
             sendJSONToURL(authenticationURL, json: authenticationResponse, method: "POST") { (data: Data?, response: URLResponse?, error: Error?) in
                 

@@ -1,11 +1,11 @@
 //
 //  Bridging-Header.h
-//  TasksGalore
 //
-//  Created by Fahim Farook on 12/6/14.
-//  Copyright (c) 2014 RookSoft Pte. Ltd. All rights reserved.
+//  Created by Sam Claus on 9/22/16.
+//  Copyright Tera Insights, LLC
 //
 
 #import "FMDB.h"
+#import "KeyGenerator.h"
 #import <time.h>
 #import <CommonCrypto/CommonDigest.h>
