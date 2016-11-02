@@ -49,6 +49,7 @@ func insertNewKey(_ keyID: String, appID: String, userID: String) {
     do {
         
         try database.executeUpdate("INSERT INTO keys VALUES ('\(keyID)', '\(appID)', '0', '\(userID)', '\(Date())');", values: nil)
+		refreshTableData()
         
     } catch let error {
         
@@ -56,6 +57,21 @@ func insertNewKey(_ keyID: String, appID: String, userID: String) {
         
     }
     
+}
+
+func deleteKey(withID keyID: String) {
+	
+	do {
+		
+		try database.executeUpdate("DELETE FROM keys WHERE keyID = '\(keyID)'", values: nil)
+		refreshTableData()
+		
+	} catch let error {
+		
+		print(error)
+		
+	}
+	
 }
 
 func insertNewServer(_ appID: String, appName: String, appURL: String) {
@@ -135,11 +151,12 @@ func getRecentKeys() -> [[String:AnyObject]] {
     
     do {
         
-        let query = try database.executeQuery("SELECT userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5", values: nil)
+        let query = try database.executeQuery("SELECT keyID, userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY used DESC LIMIT 5", values: nil)
         
         while query.next() {
             
             result.append([
+				"keyID": query.string(forColumn: "keyID") as AnyObject,
                 "userID": query.string(forColumn: "userID") as AnyObject,
                 "appName": query.string(forColumn: "appName") as AnyObject,
                 "appURL": query.string(forColumn: "appURL") as AnyObject,
@@ -165,11 +182,12 @@ func getAllKeys() -> [[String:AnyObject]] {
     
     do {
         
-        let query = try database.executeQuery("SELECT userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC", values: nil)
+        let query = try database.executeQuery("SELECT keyID, userID, appName, appURL, used, counter FROM keys, servers WHERE keys.appID = servers.appID ORDER BY appName, userID DESC", values: nil)
         
         while query.next() {
             
-            result.append([
+			result.append([
+				"keyID": query.string(forColumn: "keyID") as AnyObject,
                 "userID": query.string(forColumn: "userID") as AnyObject,
                 "appName": query.string(forColumn: "appName") as AnyObject,
                 "appURL": query.string(forColumn: "appURL") as AnyObject,

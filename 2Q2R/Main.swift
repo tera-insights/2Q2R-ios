@@ -9,22 +9,25 @@
 import UIKit
 
 var keyTable: UITableView?
-var recentKeys: [[String:AnyObject]] = getRecentKeys()
-var allKeys: [[String:AnyObject]] = getAllKeys() {
-    
-    didSet {
-        
-        DispatchQueue.main.async {
-        
-            keyTable?.reloadData()
-            keyTable?.setNeedsDisplay()
-        
-        }
+var recentKeys: [[String:AnyObject]] = []
+var allKeys: [[String:AnyObject]] = []
 
-        print("Keys updated!")
-        
-    }
-    
+func refreshTableData() {
+	
+	recentKeys = getRecentKeys()
+	allKeys = getAllKeys()
+	
+}
+
+extension UITableView {
+	
+	func refresh() {
+		
+		self.reloadData()
+		self.setNeedsDisplay()
+		
+	}
+	
 }
 
 class Main: UITableViewController {
@@ -41,6 +44,7 @@ class Main: UITableViewController {
         super.viewDidLoad()
         
         keyTable = self.tableView
+		refreshTableData()
         
     }
 
@@ -78,8 +82,8 @@ class Main: UITableViewController {
         
         let cell = tableView.dequeueReusableCell(withIdentifier: "KeyCell") as! KeyCell
         
-        let userID = (indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row]["userID"] : allKeys[(indexPath as NSIndexPath).row]["userID"]
-        let appName = (indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row]["appName"] : allKeys[(indexPath as NSIndexPath).row]["appName"]
+        let userID = indexPath.section == 0 ? recentKeys[indexPath.row]["userID"] : allKeys[indexPath.row]["userID"]
+        let appName = indexPath.section == 0 ? recentKeys[indexPath.row]["appName"] : allKeys[indexPath.row]["appName"]
         
         cell.userID.text = userID as? String
         cell.appName.text = appName as? String
@@ -90,7 +94,7 @@ class Main: UITableViewController {
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
-        let keyDesc = ((indexPath as NSIndexPath).section == 0 ? recentKeys[(indexPath as NSIndexPath).row] : allKeys[(indexPath as NSIndexPath).row])
+        let keyDesc = indexPath.section == 0 ? recentKeys[indexPath.row] : allKeys[indexPath.row]
         let keyDetailsView = storyboard?.instantiateViewController(withIdentifier: "keyDetails") as! KeyDetails
         
         let dateTimeUsed = keyDesc["used"] as! Date
@@ -117,6 +121,36 @@ class Main: UITableViewController {
         tableView.deselectRow(at: indexPath, animated: true)
         
     }
+	
+	override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
+		
+		return true
+		
+	}
+	
+	override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+		
+		if editingStyle == .delete {
+			
+			var keyID: String
+			
+			if indexPath.section == 0 && tableView.numberOfSections > 1 {
+				
+				keyID = recentKeys[indexPath.row]["keyID"] as! String
+				
+			} else {
+				
+				keyID = allKeys[indexPath.row]["keyID"] as! String
+				
+			}
+			
+			deleteKey(withID: keyID)
+			tableView.deleteRows(at: [indexPath], with: .left)
+			tableView.insertRows(at: [indexPath], with: .bottom)
+			
+		}
+		
+	}
 
 }
 
