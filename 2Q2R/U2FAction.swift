@@ -191,50 +191,45 @@ class U2FActionRegister: U2FAction {
         var alias = data.base64EncodedString(options: NSData.Base64EncodingOptions(rawValue: 0))
 		alias = alias.makeWebsafe()
 		
-		err = KeyGenerator.generatePairInSecureEnclave(withHandle: alias)
+		// The device must be protected to use 2Q2R
+		let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, [.privateKeyUsage, .touchIDCurrentSet], nil)!
 		
-//        let access = SecAccessControlCreateWithFlags(nil, kSecAttrAccessibleWhenPasscodeSetThisDeviceOnly, .touchIDCurrentSet, nil)!
-//        
-//        // Key pair parameters
-//        let keyParams: [String:AnyObject] = [
-//            kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-//            kSecAttrKeySizeInBits as String: 256 as AnyObject,
-//            kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
-//            kSecPrivateKeyAttrs as String: [
-//                kSecAttrIsPermanent as String: true,
-//                kSecAttrLabel as String: "private",
-//                kSecAttrApplicationTag as String: alias,
-//                kSecAttrAccessControl as String: access
-//            ] as AnyObject,
-//            kSecPublicKeyAttrs as String: [
-//                kSecAttrIsPermanent as String: true,
-//                kSecAttrLabel as String: "public",
-//                kSecAttrApplicationTag as String: alias
-//                ] as AnyObject
-//        ]
-//        
-//        var pubKeyRef, privKeyRef: SecKey?
-//        err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
-//        
-//        guard let _ = pubKeyRef , err == errSecSuccess else {
-//            
-//            print(err)
-//            displayError(err == errSecAuthFailed ? .userAuthNotSet : .unspecified, withTitle: "Key Generation Failed")
-//            return nil
-//            
-//        }
-		
-        // Export the public key for application use
-        let query: [String:AnyObject] = [
-            kSecClass as String: kSecClassKey,
-            kSecAttrLabel as String: "public" as AnyObject,
-            kSecAttrApplicationTag as String: alias as AnyObject,
+        // Key pair parameters
+        let keyParams: [String:AnyObject] = [
             kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-            kSecReturnData as String: true as AnyObject
+            kSecAttrKeySizeInBits as String: 256 as AnyObject,
+            kSecAttrTokenID as String: kSecAttrTokenIDSecureEnclave,
+            kSecPrivateKeyAttrs as String: [
+                kSecAttrIsPermanent as String: true,
+                kSecAttrLabel as String: "private",
+                kSecAttrApplicationTag as String: alias,
+                kSecAttrAccessControl as String: access
+            ] as AnyObject
         ]
-        var pubKeyOpt: AnyObject?
-        err = SecItemCopyMatching(query as CFDictionary, &pubKeyOpt)
+		
+		// Generate the key pair
+        var pubKeyRef, privKeyRef: SecKey?
+        err = SecKeyGeneratePair(keyParams as CFDictionary, &pubKeyRef, &privKeyRef)
         
+        guard pubKeyRef != nil && err == errSecSuccess else {
+            
+            displayError(err == errSecAuthFailed ? .userAuthNotSet : .unspecified, withTitle: "Key Generation Failed")
+            return nil
+            
+        }
+		
+        // Export the public key for application use (by adding Apple's weird format to the key chain, which spits back out a normal 65 byte public key)
+		var pubKeyOpt: AnyObject?
+		
+		err = SecItemAdd([
+			kSecClass as String: kSecClassKey,
+			kSecAttrKeyType as String: kSecAttrKeyTypeEC,
+			kSecAttrIsPermanent as String: false,
+			kSecValueRef as String: pubKeyRef!,
+			kSecAttrKeyClass as String: kSecAttrKeyClassPublic,
+			kSecReturnData as String: true
+		] as CFDictionary, &pubKeyOpt)
+		
         if let pubKey = pubKeyOpt as? Data , err == errSecSuccess {
             
             return (alias, pubKey)
@@ -329,6 +324,8 @@ class U2FActionRegister: U2FAction {
     fileprivate func sendRegistrationResponse() {
         
         if let keyRefs = genKeyPair() {
+			
+			print(keyRefs.pubKey as NSData)
         
             let registrationData = NSMutableData()
             let bytesToSign = NSMutableData()
@@ -506,11 +503,11 @@ class U2FActionAuthenticate: U2FAction {
             
             switch error {
             case errSecAuthFailed:
-                displayError(.userAuthFailed, withTitle: "Could not Sign Registration Response")
+                displayError(.userAuthFailed, withTitle: "Could not Sign Authentication Response")
             case errSecUserCanceled:
                 displayError(.userAuthCanceled, withTitle: self.appName)
             default:
-                displayError(.unspecified, withTitle: "Could not Sign Registration Response")
+                displayError(.unspecified, withTitle: "Could not Sign Authentication Response")
             }
             
             return nil

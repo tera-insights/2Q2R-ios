@@ -18,8 +18,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         
-        KeyInterface.lo
-        
         // Configure firebase
         if #available(iOS 10.0, *) {
             

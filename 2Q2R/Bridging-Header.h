@@ -6,6 +6,5 @@
 //
 
 #import "FMDB.h"
-#import "KeyGenerator.h"
 #import <time.h>
 #import <CommonCrypto/CommonDigest.h>
